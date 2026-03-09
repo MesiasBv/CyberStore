@@ -472,5 +472,7 @@ def ventas_proveedores():
         proveedor_top=proveedor_top,
         ventas_hoy_count=ventas_hoy_count,
         ingresos_hoy=ingresos_hoy,
-        hoy=hoy.strftime('%Y-%m-%d')
+        hoy=hoy.strftime('%Y-%m-%d'),
+        date=date,
+        timedelta=timedelta
     )
