@@ -22,7 +22,47 @@ def admin_required(f):
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
-    return render_template('admin/dashboard.html')
+    # 1. Contar clientes activos
+    clientes_activos = Cliente.query.filter_by(estado=True).count()
+    
+    # 2. Calcular ingresos totales de todas las ventas
+    ventas_totales = Venta.query.all()
+    servicios_totales = ServicioAdquirido.query.all()
+    ingresos_totales = sum(float(v.precio_final) for v in ventas_totales)
+    ingresos_totales += sum(float(s.precio_pagado) for s in servicios_totales)
+    
+    # 3. Contar cuentas en stock (disponibles)
+    cuentas_stock = InventarioStock.query.filter_by(estado='Disponible').count()
+    
+    # 4. Contar proveedores activos
+    proveedores_activos = Proveedor.query.filter_by(estado=True).count()
+    
+    # 5. Ventas de hoy
+    hoy = date.today()
+    hoy_inicio = datetime.combine(hoy, datetime.min.time())
+    hoy_fin = datetime.combine(hoy, datetime.max.time())
+    
+    ventas_hoy = Venta.query.filter(
+        Venta.fecha_venta >= hoy_inicio,
+        Venta.fecha_venta <= hoy_fin
+    ).count()
+    
+    inventario_ids = [inv.id for inv in InventarioStock.query.all()]
+    servicios_hoy = ServicioAdquirido.query.filter(
+        ServicioAdquirido.fecha_compra >= hoy_inicio,
+        ServicioAdquirido.fecha_compra <= hoy_fin,
+        ServicioAdquirido.inventario_id.in_(inventario_ids)
+    ).count() if inventario_ids else 0
+    
+    ventas_hoy_total = ventas_hoy + servicios_hoy
+    
+    return render_template('admin/dashboard.html', 
+        clientes_activos=clientes_activos,
+        ingresos_totales=ingresos_totales,
+        cuentas_stock=cuentas_stock,
+        proveedores_activos=proveedores_activos,
+        ventas_hoy=ventas_hoy_total
+    )
 
 # --- NUEVO MÓDULO: GESTIÓN DE PROVEEDORES ---
 
