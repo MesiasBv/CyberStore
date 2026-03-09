@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Política de Privacidad - CyberStore{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card-dark p-4 p-lg-5 border border-secondary" style="border-radius: 15px; box-shadow: 0 0 20px rgba(0, 210, 106, 0.1);">
+                <h2 class="text-cyber fw-bold mb-4">
+                    <i class="fa-solid fa-shield-halved me-2"></i>Política de Privacidad
+                </h2>
+                
+                <div class="text-muted mb-4">
+                    <i class="fa-solid fa-calendar me-2"></i>Última actualización: Marzo 2026
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <!-- Introducción -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">1. Introducción</h5>
+                    <p class="text-secondary">
+                        En CyberStore respetamos su privacidad y nos comprometemos a proteger sus datos personales. 
+                        Esta Política de Privacidad explica cómo recopilamos, usamos y protegemos su información.
+                    </p>
+                </div>
+
+                <!-- Tratamiento de Datos -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">2. Tratamiento de Datos Personales</h5>
+                    <p class="text-secondary">
+                        Recopilamos los siguientes datos para la gestión de nuestra plataforma:
+                    </p>
+                    <ul class="text-secondary" style="list-style: none;">
+                        <li class="mb-2"><i class="fa-solid fa-user text-cyber me-2"></i><strong>Nombre de usuario:</strong> Para identificar su cuenta</li>
+                        <li class="mb-2"><i class="fa-solid fa-envelope text-cyber me-2"></i><strong>Correo electrónico:</strong> Para la gestión de la billetera virtual y historial de compras</li>
+                        <li class="mb-2"><i class="fa-solid fa-phone text-cyber me-2"></i><strong>Teléfono:</strong> Para contacto directo cuando sea necesario</li>
+                        <li class="mb-2"><i class="fa-solid fa-wallet text-cyber me-2"></i><strong>Saldo:</strong> Para gestionar transacciones en la plataforma</li>
+                    </ul>
+                </div>
+
+                <!-- Seguridad de Credenciales -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">3. Seguridad de Credenciales</h5>
+                    <p class="text-secondary">
+                        Las cuentas de Netflix y otros servicios que usted adquiere se almacenan de forma segura 
+                        en nuestro sistema hasta su entrega automática. 
+                    </p>
+                    <div class="alert alert-info border-info" style="background-color: rgba(13, 202, 240, 0.1);">
+                        <i class="fa-solid fa-lock me-2 text-info"></i>
+                        <strong>Seguridad:</strong> Las credenciales se cifran y solo se accederá a ellas durante el proceso de entrega automática.
+                    </div>
+                </div>
+
+                <!-- Privacidad del Proveedor -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">4. Privacidad del Proveedor</h5>
+                    <p class="text-secondary">
+                        Los datos de contacto del Proveedor (teléfono, WhatsApp) 
+                        <strong>solo se comparten con el Cliente si este requiere soporte directo</strong> sobre el producto adquirido.
+                    </p>
+                    <p class="text-secondary">
+                        El contacto directo entre Cliente y Proveedor está permitido únicamente para:
+                    </p>
+                    <ul class="text-secondary" style="list-style: none;">
+                        <li class="mb-2"><i class="fa-solid fa-check text-cyber me-2"></i>Resolver problemas con el producto adquirido</li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-cyber me-2"></i>Coordinar la entrega de credenciales</li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-cyber me-2"></i>Soporte técnico del servicio</li>
+                    </ul>
+                </div>
+
+                <!-- Cookies -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">5. Cookies</h5>
+                    <p class="text-secondary">
+                        Utilizamos cookies para mejorar su experiencia de navegación. Las cookies nos permiten:
+                    </p>
+                    <ul class="text-secondary" style="list-style: none;">
+                        <li class="mb-2"><i class="fa-solid fa-cookie text-cyber me-2"></i>Mantener su sesión iniciada</li>
+                        <li class="mb-2"><i class="fa-solid fa-cookie text-cyber me-2"></i>Recordar sus preferencias</li>
+                        <li class="mb-2"><i class="fa-solid fa-cookie text-cyber me-2"></i>Analizar el uso de la plataforma</li>
+                    </ul>
+                </div>
+
+                <!-- Derechos del Usuario -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">6. Derechos del Usuario</h5>
+                    <p class="text-secondary">
+                        Usted tiene derecho a:
+                    </p>
+                    <ul class="text-secondary" style="list-style: none;">
+                        <li class="mb-2"><i class="fa-solid fa-eye text-cyber me-2"></i>Acceder a sus datos personales</li>
+                        <li class="mb-2"><i class="fa-solid fa-pen-to-square text-cyber me-2"></i>Corregir datos inexactos</li>
+                        <li class="mb-2"><i class="fa-solid fa-trash text-cyber me-2"></i>Solicitar la eliminación de su cuenta</li>
+                        <li class="mb-2"><i class="fa-solid fa-download text-cyber me-2"></i>Exportar sus datos</li>
+                    </ul>
+                </div>
+
+                <!-- Contacto -->
+                <div class="mt-5 p-4 rounded-3" style="background-color: rgba(0, 210, 106, 0.1); border: 1px solid #00d26a;">
+                    <h6 class="text-cyber fw-bold">
+                        <i class="fa-solid fa-headset me-2"></i>¿Tienes preguntas sobre privacidad?
+                    </h6>
+                    <p class="text-secondary mb-0">
+                        Contáctanos a través de nuestro 
+                        <a href="{{ url_for('public.ayuda') }}" class="text-cyber">Centro de Ayuda</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

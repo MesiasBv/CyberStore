@@ -1,0 +1,75 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Mi Cuenta - Proveedor{% endblock %}
+{% block page_title %}Mi Configuración de Cuenta{% endblock %}
+
+{% block content %}
+<div class="card card-dark border-0 shadow mt-2" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header border-secondary bg-transparent py-3 text-center">
+        <h5 class="mb-0 text-white"><i class="fa-solid fa-user-gear text-cyber"></i> Editar mis Datos Personales</h5>
+        <p class="text-secondary small m-0">Actualiza tu información pública de perfil.</p>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('proveedor.editar_perfil') }}" method="POST">
+            
+<div class="mb-3">
+                <label class="form-label text-secondary small">Nombre de la Empresa</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre" value="{{ proveedor.nombre }}" required autofocus>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small">Nombre de Usuario</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_usuario" value="{{ proveedor.nombre_usuario }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small">WhatsApp (Número para entrega de códigos)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-secondary border-secondary text-dark">+51</span>
+                    <input type="text" class="form-control bg-dark text-white border-secondary" name="telefono_contacto" value="{{ proveedor.telefono_contacto or '' }}" placeholder="912345678">
+                </div>
+                <small class="text-secondary" style="font-size: 0.7rem;">Ingresa tu número de WhatsApp (9 dígitos) para que los clientes puedan solicitarte los códigos de activación.</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small">Correo Electrónico (Para recibir el 2FA)</label>
+                <div class="input-group">
+                    <input type="email" class="form-control bg-dark text-white border-secondary" value="{{ proveedor.correo }}" readonly disabled title="El correo solo puede ser cambiado por el administrador.">
+                    <span class="input-group-text bg-secondary border-secondary text-dark" title="El correo solo puede ser cambiado por el administrador."><i class="fa-solid fa-lock"></i> Bloqueado</span>
+                </div>
+                <small class="text-secondary" style="font-size: 0.7rem;">Si necesitas cambiar tu correo, por favor contáctate con el administrador.</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small">Nueva Contraseña</label>
+                <div class="input-group">
+                    <input type="password" class="form-control bg-dark text-white border-secondary" name="password" id="passPerfil" placeholder="(Dejar en blanco para no cambiar)">
+                    <button class="btn btn-outline-secondary border-secondary text-secondary" type="button" onclick="togglePassword('passPerfil', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-footer border-secondary mt-4 pb-0">
+                <button type="submit" class="btn btn-info text-dark fw-bold">Actualizar Perfil</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePassword(inputId, boton) {
+        let input = document.getElementById(inputId);
+        let icono = boton.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icono.classList.remove('fa-eye');
+            icono.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icono.classList.remove('fa-eye-slash');
+            icono.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}

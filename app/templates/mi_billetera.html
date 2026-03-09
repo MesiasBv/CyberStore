@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Billetera - CyberStore{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white fw-bold"><i class="fa-solid fa-wallet text-cyber"></i> Mi Billetera</h2>
+        <a href="{{ url_for('public.index') }}" class="btn btn-outline-secondary btn-sm">Volver a la tienda</a>
+    </div>
+
+    <!-- Saldo Actual -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-dark border-0 shadow-lg" style="background: linear-gradient(135deg, #1a1a24 0%, #00d26a 100%);">
+                <div class="card-body text-center py-5">
+                    <h5 class="text-white-50 mb-2">Tu Saldo Actual</h5>
+                    <h1 class="display-3 fw-bold text-white mb-4">S/ {{ "%.2f"|format(current_user_obj.saldo) }}</h1>
+                    <button class="btn btn-light fw-bold px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalAgregarFondos">
+                        <i class="fa-solid fa-plus-circle me-2"></i> Agregar Fondos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Movimientos -->
+    <div class="card card-dark border-0 shadow-lg">
+        <div class="card-header border-secondary bg-transparent">
+            <h5 class="text-white mb-0"><i class="fa-solid fa-history text-cyber me-2"></i> Historial de Movimientos</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="text-secondary small text-uppercase">
+                        <tr>
+                            <th class="ps-4">Fecha</th>
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th class="text-end">Monto</th>
+                            <th class="text-end pe-4">Saldo Resultante</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in movimientos %}
+                        <tr>
+                            <td class="ps-4 text-secondary small">{{ m.fecha_movimiento.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                {% if m.tipo == 'Recarga' %}
+                                <span class="badge bg-success"><i class="fa-solid fa-arrow-up me-1"></i> Recarga</span>
+                                {% elif m.tipo == 'Compra' %}
+                                <span class="badge bg-danger"><i class="fa-solid fa-arrow-down me-1"></i> Compra</span>
+                                {% elif m.tipo == 'Reembolso' %}
+                                <span class="badge bg-warning text-dark"><i class="fa-solid fa-rotate-left me-1"></i> Reembolso</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-white">{{ m.descripcion or 'Sin descripción' }}</td>
+                            <td class="text-end {% if m.tipo == 'Recarga' or m.tipo == 'Reembolso' %}text-success{% else %}text-danger{% endif %}">
+                                {% if m.tipo == 'Recarga' or m.tipo == 'Reembolso' %}+{% else %}-{% endif %}S/ {{ "%.2f"|format(m.monto) }}
+                            </td>
+                            <td class="text-end text-white pe-4">S/ {{ "%.2f"|format(m.saldo_resultante) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="fa-solid fa-receipt fa-3x text-secondary mb-3"></i>
+                                <p class="text-secondary mb-0">Aún no tienes movimientos en tu billetera.</p>
+                                <p class="text-secondary small">¡Agrega fondos para empezar a comprar!</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Fondos con Yape -->
+<div class="modal fade" id="modalAgregarFondos" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-dark border-secondary text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fa-brands fa-whatsapp text-success"></i> Agregar Fondos por Yape</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Nota Importante - Como parte del formulario -->
+                <div class="card bg-danger bg-opacity-10 border border-danger border-opacity-25 mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-triangle-exclamation text-danger fs-5 me-3"></i>
+                            <div>
+                                <strong class="text-danger">Importante:</strong>
+                                <span class="text-white">Después de realizar el pago, envíanos el voucher por WhatsApp para validar tu recarga.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 1: Seleccionar monto -->
+                <div id="paso1">
+                    <div class="alert alert-info border-secondary bg-dark bg-opacity-50 mb-3">
+                        <i class="fa-solid fa-info-circle me-2"></i>
+                        Selecciona el monto que deseas recargar:
+                    </div>
+                    
+                    <div class="row g-2 mb-4">
+                        {% for monto in [10, 20, 30, 50, 100] %}
+                        <div class="col-4 col-md-2">
+                            <button class="btn btn-outline-cyber w-100 py-3 fw-bold" onclick="seleccionarMonto({{ monto }})">
+                                S/ {{ monto }}
+                            </button>
+                        </div>
+                        {% endfor %}
+                        <div class="col-4 col-md-2">
+                            <button class="btn btn-outline-secondary w-100 py-3 fw-bold" onclick="mostrarMontoPersonalizado()">
+                                Otro
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="montoPersonalizado" class="mb-3" style="display: none;">
+                        <label class="form-label text-secondary">Monto personalizado (S/)</label>
+                        <input type="number" class="form-control bg-dark border-secondary text-white" id="montoInput" min="3" max="500" step="0.01" placeholder="Ingresa el monto (entre 3 y 500)">
+                        <button class="btn btn-cyber mt-2" onclick="confirmarMontoPersonalizado()">Confirmar</button>
+                    </div>
+                    
+                    <!-- Indicaciones de pago -->
+                    <div class="card bg-dark border-secondary mt-4">
+                        <div class="card-header border-secondary bg-transparent">
+                            <h6 class="mb-0 text-cyber"><i class="fa-solid fa-circle-info me-2"></i> ¿Cómo recargar?</h6>
+                        </div>
+                        <div class="card-body">
+                            <ol class="text-secondary small ps-3">
+                                <li class="mb-2">Selecciona el monto que deseas recargar en tu billetera.</li>
+                                <li class="mb-2">Realiza el pago mediante <strong>Yape</strong> al número que se mostrará.</li>
+                                <li class="mb-2">Captura el <strong>voucher de pago</strong> (captura de pantalla o foto).</li>
+                                <li class="mb-2">Haz clic en <strong>"Enviar Voucher por WhatsApp"</strong> y envíanos la imagen.</li>
+                                <li class="mb-0">Nuestro equipo validará tu pago y <strong>agregará los fondos</strong> a tu billetera en breve.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Condiciones -->
+                    <div class="card bg-dark border-secondary mt-3">
+                        <div class="card-header border-secondary bg-transparent">
+                            <h6 class="mb-0 text-warning"><i class="fa-solid fa-gavel me-2"></i> Términos y Condiciones</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="text-secondary small mb-0 ps-3">
+                                <li class="mb-1">El monto mínimo de recarga es de <strong>S/ 3.00</strong>.</li>
+                                <li class="mb-1">El monto máximo de recarga es de <strong>S/ 500.00</strong>.</li>
+                                <li class="mb-1">Las recargas solo se procesan en <strong>horario laboral</strong> (8:00 AM - 11:00 PM).</li>
+                                <li class="mb-1">El tiempo de validación es de <strong>5 a 30 minutos</strong> después de enviar el voucher.</li>
+                                <li class="mb-1">Los vouchers deben ser enviados <strong>el mismo día</strong> de la transferencia.</li>
+                                <li class="mb-0">No nos hacemos responsables por transferencias realizadas a números incorrectos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Paso 2: Datos de Yape -->
+                <div id="paso2" style="display: none;">
+                    <div class="text-center mb-4">
+                        <h5 class="text-white">Monto a pagar: <span class="text-cyber fw-bold" id="montoSeleccionado">S/ 0.00</span></h5>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 text-center mb-3">
+                            <div class="card bg-dark border-secondary p-4">
+                                <h6 class="text-secondary mb-3">Escanea el código QR</h6>
+                                <img src="{{ config.YAPE_LINK_QR }}" alt="QR Yape" class="img-fluid rounded mx-auto d-block" style="max-width: 200px;" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.yape.com.pe'">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-dark border-secondary p-3 mb-3">
+                                <h6 class="text-secondary mb-2">Número Yape</h6>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="h4 mb-0 text-white">{{ config.YAPE_NUMERO }}</span>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="copiarNumero()">
+                                        <i class="fa-regular fa-copy"></i> Copiar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="card bg-dark border-secondary p-3 mb-3">
+                                <h6 class="text-secondary mb-2">A nombre de</h6>
+                                <p class="h5 mb-0 text-white">{{ config.YAPE_NOMBRE }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a id="btnWhatsapp" href="#" class="btn btn-success btn-lg fw-bold" target="_blank">
+                            <i class="fa-brands fa-whatsapp me-2"></i> Enviar Voucher por WhatsApp
+                        </a>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <button class="btn btn-outline-secondary" onclick="volverPaso1()">
+                            <i class="fa-solid fa-arrow-left me-2"></i> Cambiar monto
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-outline-cyber {
+        border: 2px solid #00d26a;
+        color: #00d26a;
+        background: transparent;
+    }
+    .btn-outline-cyber:hover, .btn-outline-cyber:active {
+        background: #00d26a;
+        color: #000 !important;
+    }
+    .btn-cyber {
+        background: #00d26a;
+        color: #000;
+        border: none;
+    }
+    .btn-cyber:hover {
+        background: #00b359;
+        color: #fff;
+    }
+</style>
+
+<script>
+    let montoActual = 0;
+    const numeroWhatsApp = '{{ config.WHATSAPP_ADMIN }}';
+    const nombreUsuario = '{{ current_user_obj.nombre_usuario }}';
+    
+    function seleccionarMonto(monto) {
+        montoActual = monto;
+        mostrarPaso2();
+    }
+    
+    function mostrarMontoPersonalizado() {
+        document.getElementById('montoPersonalizado').style.display = 'block';
+    }
+    
+    function confirmarMontoPersonalizado() {
+        const monto = parseFloat(document.getElementById('montoInput').value);
+        if (monto >= 3 && monto <= 500) {
+            montoActual = monto;
+            mostrarPaso2();
+        } else if (monto < 3) {
+            alert('El monto mínimo de recarga es de S/ 3.00');
+        } else if (monto > 500) {
+            alert('El monto máximo de recarga es de S/ 500.00');
+        }
+    }
+    
+    function mostrarPaso2() {
+        document.getElementById('paso1').style.display = 'none';
+        document.getElementById('paso2').style.display = 'block';
+        document.getElementById('montoSeleccionado').textContent = 'S/ ' + montoActual.toFixed(2);
+        
+        // Generar mensaje para WhatsApp
+        const mensaje = encodeURIComponent(`Hola, soy ${nombreUsuario}. Acabo de realizar un pago de S/ ${montoActual.toFixed(2)} por Yape. Adjunto el voucher para validar mi recarga.`);
+        const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
+        document.getElementById('btnWhatsapp').href = urlWhatsApp;
+    }
+    
+    function volverPaso1() {
+        document.getElementById('paso1').style.display = 'block';
+        document.getElementById('paso2').style.display = 'none';
+    }
+    
+    function copiarNumero() {
+        navigator.clipboard.writeText('{{ config.YAPE_NUMERO }}').then(() => {
+            alert('Número copiado al portapapeles');
+        });
+    }
+    
+    // Reiniciar el modal cuando se cierre
+    document.getElementById('modalAgregarFondos').addEventListener('hidden.bs.modal', function () {
+        volverPaso1();
+        document.getElementById('montoPersonalizado').style.display = 'none';
+        document.getElementById('montoInput').value = '';
+    });
+</script>
+{% endblock %}

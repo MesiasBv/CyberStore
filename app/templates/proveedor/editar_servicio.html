@@ -1,0 +1,56 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Editar Servicio{% endblock %}
+{% block page_title %}Editar Fechas del Servicio{% endblock %}
+
+{% block content %}
+<div class="card card-dark border-0 shadow" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header border-secondary bg-transparent py-3 text-center">
+        <h5 class="mb-0 text-white">
+            <i class="fa-solid fa-calendar-days text-cyber"></i> Editar Fechas del Servicio
+        </h5>
+        <p class="text-secondary small m-0">Actualiza las fechas de inicio y fin del servicio.</p>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('proveedor.editar_servicio', id=servicio.id) }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-secondary">Cliente</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ servicio.cliente.nombre_completo }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary">Producto</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ servicio.producto.nombre_producto }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary">Precio Pagado</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" value="S/ {{ servicio.precio_pagado }}" readonly>
+            </div>
+            <hr class="border-secondary">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-secondary">Fecha de Inicio</label>
+                    <input type="date" class="form-control bg-dark text-white border-secondary" name="fecha_inicio" 
+                           value="{{ servicio.fecha_inicio.strftime('%Y-%m-%d') if servicio.fecha_inicio else '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-secondary">Fecha de Fin</label>
+                    <input type="date" class="form-control bg-dark text-white border-secondary" name="fecha_fin" 
+                           value="{{ servicio.fecha_fin.strftime('%Y-%m-%d') if servicio.fecha_fin else '' }}" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary">Estado Actual</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary fw-bold" value="{{ servicio.estado_servicio }}" readonly>
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('proveedor.mis_ventas') }}" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> Volver
+                </a>
+                <button type="submit" class="btn btn-cyber">
+                    <i class="fa-solid fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

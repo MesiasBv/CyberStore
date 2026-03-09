@@ -1,0 +1,39 @@
+# Entornos virtuales (¡No queremos subir miles de archivos de librerías!)
+venv/
+env/
+Lib/
+Scripts/
+
+# Variables de entorno y secretos (¡NUNCA SUBIR ESTO!)
+.env
+.flaskenv
+
+# Archivos compilados de Python (Se generan solos, no los necesitamos)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de Visual Studio Code y otros editores
+.vscode/
+.idea/
+
+# Archivos del sistema operativo (Windows/Mac)
+.DS_Store
+Thumbs.db
+
+
+# --- Extensiones Específicas para CyberStore ---
+
+# Base de Datos y XAMPP (Protección contra corrupción y datos sensibles)
+*.sql
+mysql/
+data/
+*.err
+*.pib
+ib_logfile*
+ibdata*
+
+# Archivos de carga de productos (Imágenes de Netflix/Streaming)
+static/uploads/*
+!static/uploads/.gitkeep

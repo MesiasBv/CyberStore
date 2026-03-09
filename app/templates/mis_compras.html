@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Compras - CyberStore{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if abrir_venta_id %}
+    {% for c in compras %}
+    {% if c.id == abrir_venta_id %}
+    <div class="alert alert-success d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 mb-4 p-4" role="alert">
+        <div>
+            <h4 class="alert-heading mb-1"><i class="fa-solid fa-circle-check text-success me-2"></i>¡Compra realizada correctamente!</h4>
+            <p class="mb-0">Tu compra <strong>{{ c.producto.nombre_producto }}</strong> (Código: {{ c.codigo_unico }}) ha sido procesada exitosamente.</p>
+        </div>
+        <div>
+            {% if c.producto.tipo_entrega == 'cliente_propio' %}
+            <button class="btn btn-success btn-lg fw-bold" data-bs-toggle="modal" data-bs-target="#modalCorreo{{ c.id }}">
+                <i class="fa-solid fa-envelope me-2"></i>Completar Activación
+            </button>
+            {% elif c.producto.tipo_entrega == 'codigo' %}
+            <button class="btn btn-warning btn-lg fw-bold" data-bs-toggle="modal" data-bs-target="#modalCuenta{{ c.id }}">
+                <i class="fa-solid fa-key me-2"></i>Ver Datos de Activación
+            </button>
+            {% else %}
+            <button class="btn btn-primary btn-lg fw-bold" data-bs-toggle="modal" data-bs-target="#modalCuenta{{ c.id }}">
+                <i class="fa-solid fa-user-lock me-2"></i>Ver Credenciales
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white fw-bold"><i class="fa-solid fa-bag-shopping text-cyber"></i> Historial de Compras</h2>
+        <a href="{{ url_for('public.index') }}" class="btn btn-outline-secondary btn-sm">Volver a la tienda</a>
+    </div>
+
+    <div class="card card-dark border-0 shadow-lg">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="text-secondary small text-uppercase">
+                        <tr>
+                            <th class="ps-4">Producto</th>
+                            <th>Código</th>
+                            <th>Precio Pagado</th>
+                            <th>Fecha</th>
+<th class="text-center">Estado de Entrega</th>
+                            <th class="text-center">Soporte</th>
+                            <th class="text-center">Datos de Acceso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in compras %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ url_for('static', filename=c.producto.imagen_url) if c.producto.imagen_url else '#' }}" 
+                                         class="rounded me-3 border border-secondary" style="width: 45px; height: 45px; object-fit: cover;">
+                                    <div>
+                                        <div class="text-white fw-bold">{{ c.producto.nombre_producto }}</div>
+                                        <span class="badge bg-dark border border-secondary text-info" style="font-size: 0.7rem;">ID: #{{ c.id }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-warning fw-bold">{{ c.codigo_unico }}</td>
+                            <td class="text-success fw-bold">S/ {{ "%.2f"|format(c.precio_final) }}</td>
+                            <td class="text-secondary small">{{ c.fecha_venta.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td class="text-center">
+                                {% if c.estado_entrega == 'Entregado' %}
+                                    <span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i> Entregado</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i> Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if c.proveedor and c.proveedor.telefono_contacto %}
+                                    <a href="https://wa.me/51{{ c.proveedor.telefono_contacto }}?text=Hola,%20tengo%20una%20consulta%20sobre%20mi%20compra%20{{ c.codigo_unico }}%20(%20{{ c.producto.nombre_producto }}%20)" 
+                                       target="_blank" class="btn btn-success btn-sm">
+                                        <i class="fa-brands fa-whatsapp"></i> Soporte
+                                    </a>
+                                {% else %}
+                                    <span class="text-secondary small">No disponible</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if c.producto.tipo_entrega == 'cliente_propio' %}
+                                    <button class="btn btn-cyber-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalCorreo{{ c.id }}">
+                                        <i class="fa-brands fa-whatsapp"></i> Contactar Proveedor
+                                    </button>
+                                {% elif c.producto.tipo_entrega == 'codigo' %}
+                                    <button class="btn btn-cyber-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalCuenta{{ c.id }}">
+                                        <i class="fa-solid fa-key"></i> Ver Datos
+                                    </button>
+                                {% else %}
+                                    {% if c.inventario_cargado %}
+                                        <button class="btn btn-cyber-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalCuenta{{ c.id }}">
+                                            <i class="fa-solid fa-key"></i> Ver Credenciales
+                                        </button>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Sin datos</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="fa-solid fa-box-open fa-3x text-secondary mb-3"></i>
+                                <p class="text-secondary mb-0">Aún no has realizado ninguna compra.</p>
+                                <a href="{{ url_for('public.index') }}" class="btn btn-link text-cyber">Ir a comprar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALES -->
+{% for c in compras %}
+{% if c.producto.tipo_entrega == 'cliente_propio' %}
+<div class="modal fade" id="modalCorreo{{ c.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-cyber text-white">
+            <div class="modal-header border-secondary bg-dark bg-opacity-50">
+                <h5 class="modal-title"><i class="fa-brands fa-whatsapp text-success"></i> Activación de tu Cuenta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-success mb-3">
+                    <i class="fa-solid fa-check-circle me-2"></i>
+                    <strong>¡Compra exitosa!</strong><br>
+                    <small>Para completar la activación, por favor ingresa tu correo electrónico a continuación.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary">Tu correo electrónico *</label>
+                    <input type="email" class="form-control bg-dark border-secondary text-white correo-input" 
+                           id="correoInput{{ c.id }}" 
+                           value="{{ c.correo_cliente or '' }}"
+                           placeholder="tucorreo@ejemplo.com" required>
+                    <small class="text-muted">El proveedor creará la cuenta en este correo.</small>
+                </div>
+                {% if c.proveedor and c.proveedor.telefono_contacto %}
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-success btn-lg btn-whatsapp" 
+                            data-venta-id="{{ c.id }}" 
+                            data-telefono="{{ c.proveedor.telefono_contacto }}"
+                            data-producto="{{ c.producto.nombre_producto }}"
+                            data-codigo="{{ c.codigo_unico }}">
+                        <i class="fa-brands fa-whatsapp me-2"></i> Contactar por WhatsApp
+                    </button>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                    El proveedor no tiene número de contacto.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% for c in compras %}
+{% if c.inventario_cargado and c.producto.tipo_entrega in ['credenciales', 'codigo'] %}
+<div class="modal fade" id="modalCuenta{{ c.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark" data-venta-id="{{ c.id }}">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-cyber text-white">
+            <div class="modal-header border-secondary bg-dark bg-opacity-50">
+                <h5 class="modal-title"><i class="fa-solid fa-unlock-keyhole text-cyber"></i> Credenciales de Acceso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="loadingCredenciales{{ c.id }}" class="text-center py-3">
+                    <div class="spinner-border text-cyber" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="text-secondary mt-2 small">Cargando credenciales...</p>
+                </div>
+                <div id="contenidoCredenciales{{ c.id }}" style="display: none;">
+                    {% if c.producto.tipo_entrega == 'codigo' %}
+                    <div class="border border-secondary rounded p-3 bg-black bg-opacity-25 mb-3">
+                        <div class="alert alert-warning mb-2">
+                            <i class="fa-solid fa-info-circle me-2"></i>
+                            <strong>Activación por Código</strong><br>
+                            <small>La contraseña te será enviada por WhatsApp.</small>
+                        </div>
+                        <p class="text-secondary small mb-1">Correo / Usuario:</p>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control bg-dark border-secondary text-white fw-bold" 
+                                   value="{{ c.inventario_cargado.correo_acceso }}" readonly id="correo{{c.id}}">
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('correo{{c.id}}')"><i class="fa-solid fa-copy"></i></button>
+                        </div>
+                        {% if c.inventario_cargado.pin_seguridad %}
+                        <p class="text-secondary small mb-1">PIN de Seguridad:</p>
+                        <div class="badge bg-cyber text-dark fs-6 px-3 mb-3">{{ c.inventario_cargado.pin_seguridad }}</div>
+                        {% endif %}
+                        {% if c.inventario_cargado.nombre_perfil_asignado %}
+                        <p class="text-secondary small mb-1">Perfil Asignado:</p>
+                        <p class="text-info fw-bold mb-0">{{ c.inventario_cargado.nombre_perfil_asignado }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="border border-warning rounded p-3 bg-warning bg-opacity-10">
+                        <p class="text-warning small mb-2"><i class="fa-solid fa-key me-1"></i> Código de Verificación:</p>
+                        {% if c.codigo_verificacion_enviado %}
+                        <div class="input-group">
+                            <input type="text" class="form-control bg-dark border-warning text-warning fw-bold" 
+                                   value="{{ c.codigo_verificacion }}" readonly id="codigoVerif{{c.id}}">
+                            <button class="btn btn-outline-warning" type="button" onclick="copyToClipboard('codigoVerif{{c.id}}')"><i class="fa-solid fa-copy"></i></button>
+                        </div>
+                        {% else %}
+                        <div class="text-center">
+                            <p class="text-secondary small mb-2">Solicita el código al proveedor por WhatsApp.</p>
+                            {% if c.proveedor and c.proveedor.telefono_contacto %}
+                            <a href="https://wa.me/51{{ c.proveedor.telefono_contacto }}?text=Hola,%20solicito%20el%20codigo%20de%20activacion%20para%20mi%20compra%20{{ c.codigo_unico }}" 
+                               target="_blank" class="btn btn-success btn-sm">
+                                <i class="fa-brands fa-whatsapp me-1"></i> Solicitar por WhatsApp
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="border border-secondary rounded p-3 bg-black bg-opacity-25">
+                        <p class="text-secondary small mb-1">Correo / Usuario:</p>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control bg-dark border-secondary text-white fw-bold" 
+                                   value="{{ c.inventario_cargado.correo_acceso }}" readonly id="correo{{c.id}}">
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('correo{{c.id}}')"><i class="fa-solid fa-copy"></i></button>
+                        </div>
+                        <p class="text-secondary small mb-1">Contraseña:</p>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control bg-dark border-secondary text-white fw-bold" 
+                                   value="{{ c.inventario_cargado.password_acceso }}" readonly id="pass{{c.id}}">
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('pass{{c.id}}')"><i class="fa-solid fa-copy"></i></button>
+                        </div>
+                        {% if c.inventario_cargado.pin_seguridad %}
+                        <p class="text-secondary small mb-1">PIN de Seguridad:</p>
+                        <div class="badge bg-cyber text-dark fs-6 px-3 mb-3">{{ c.inventario_cargado.pin_seguridad }}</div>
+                        {% endif %}
+                        {% if c.inventario_cargado.nombre_perfil_asignado %}
+                        <p class="text-secondary small mb-1">Perfil Asignado:</p>
+                        <p class="text-info fw-bold mb-0">{{ c.inventario_cargado.nombre_perfil_asignado }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <p class="text-center text-secondary small mb-0 mt-2"><i class="fa-solid fa-shield-halved"></i> No compartas estos datos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+    function copyToClipboard(elementId) {
+        var copyText = document.getElementById(elementId);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+        alert("Copiado: " + copyText.value);
+    }
+    
+    // Event delegation para botones de WhatsApp
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-whatsapp');
+        if (!btn) return;
+        
+        var ventaId = btn.getAttribute('data-venta-id');
+        var telefono = btn.getAttribute('data-telefono');
+        var producto = btn.getAttribute('data-producto');
+        var codigo = btn.getAttribute('data-codigo');
+        
+        var correoInput = document.getElementById('correoInput' + ventaId);
+        var correo = correoInput ? correoInput.value : '';
+        
+        if (!correo) {
+            alert('Por favor ingresa tu correo electrónico');
+            return;
+        }
+        
+        // Guardar el correo y obtener la URL de WhatsApp
+        var formData = new FormData();
+        formData.append('venta_id', ventaId);
+        formData.append('correo', correo);
+        
+        fetch('/guardar-correo-y-contactar', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Abrir WhatsApp con el mensaje
+                if (data.whatsapp_url) {
+                    window.open(data.whatsapp_url, '_blank');
+                } else {
+                    alert('El proveedor no tiene número de contacto');
+                }
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al guardar el correo');
+        });
+    });
+    
+    function cargarCredencialesActualizadas(ventaId) {
+        var loadingDiv = document.getElementById('loadingCredenciales' + ventaId);
+        var contenidoDiv = document.getElementById('contenidoCredenciales' + ventaId);
+        
+        if (!loadingDiv || !contenidoDiv) return;
+        
+        fetch('/obtener-credenciales-venta/' + ventaId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var correoInput = document.getElementById('correo' + ventaId);
+                    var passInput = document.getElementById('pass' + ventaId);
+                    
+                    if (correoInput && data.correo) correoInput.value = data.correo;
+                    if (passInput && data.password) passInput.value = data.password;
+                    
+                    loadingDiv.style.display = 'none';
+                    contenidoDiv.style.display = 'block';
+                } else {
+                    loadingDiv.style.display = 'none';
+                    contenidoDiv.style.display = 'block';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                loadingDiv.style.display = 'none';
+                contenidoDiv.style.display = 'block';
+            });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.modal[data-venta-id]').forEach(function(modal) {
+            modal.addEventListener('shown.bs.modal', function() {
+                var ventaId = this.getAttribute('data-venta-id');
+                if (ventaId) cargarCredencialesActualizadas(ventaId);
+            });
+        });
+    });
+</script>
+
+<style>
+    .btn-cyber-outline {
+        border: 1px solid #00d26a;
+        color: #00d26a;
+        background: transparent;
+        transition: 0.3s;
+    }
+    .btn-cyber-outline:hover {
+        background: #00d26a;
+        color: #000;
+    }
+    .bg-cyber { background-color: #00d26a; }
+</style>
+{% endblock %}
+

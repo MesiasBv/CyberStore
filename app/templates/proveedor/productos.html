@@ -1,0 +1,275 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Mis Productos - Proveedor{% endblock %}
+{% block page_title %}Catalogo de Mis Servicios{% endblock %}
+
+{% block extra_styles %}
+<style>
+    table.table-hover tbody tr:hover {
+        background-color: transparent !important;
+    }
+    table.table-hover tbody tr:hover > * {
+        background-color: transparent !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card card-dark border-0 shadow-lg">
+    <div class="card-header border-secondary d-flex justify-content-between align-items-center py-3 bg-transparent">
+        <h5 class="mb-0 text-white"><i class="fa-solid fa-boxes-stacked text-cyber"></i> Mis Productos</h5>
+        <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoProducto">
+            <i class="fa-solid fa-plus"></i> Nuevo Producto
+        </button>
+    </div>
+    
+    <div class="p-3 border-bottom border-secondary bg-dark">
+        <div class="input-group">
+            <span class="input-group-text bg-transparent text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" id="buscador" class="form-control bg-transparent text-white border-secondary" placeholder="Buscar producto por nombre o categoría...">
+        </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary">
+                    <tr>
+                        <th class="ps-4">Imagen</th>
+                        <th>Nombre del Producto</th>
+                        <th>Tipo</th>
+                        <th>Categoria</th>
+                        <th>Precio (S/)</th>
+                        <th>Renovable</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos %}
+                    <tr class="fila-producto">
+                        <td class="ps-4">
+                            {% if p.imagen_url %}
+                                <img src="{{ url_for('static', filename=p.imagen_url) }}" alt="img" width="40" height="40" class="rounded object-fit-cover border border-secondary">
+                            {% else %}
+                                <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fa-solid fa-image text-dark"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-white">{{ p.nombre_producto }}</td>
+                        <td><span class="badge bg-info text-dark">{{ p.tipo_producto }}</span></td>
+                        <td><span class="badge bg-dark border border-secondary text-info">{{ p.categoria.nombre }}</span></td>
+                        <td class="text-success fw-bold">S/ {{ "%.2f"|format(p.precio) }}</td>
+                        <td>
+                            {% if p.es_renovable %}
+                                <span class="badge bg-success"><i class="fa-solid fa-rotate"></i> Sí</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.estado %}
+                                <span class="badge bg-success">Visible</span>
+                            {% else %}
+                                <span class="badge bg-danger">Oculto</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#modalEditar{{ p.id }}" title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <a href="{{ url_for('proveedor.estado_producto', id=p.id) }}" class="btn btn-sm btn-outline-light" title="Ocultar/Mostrar">
+                                <i class="fa-solid fa-eye{% if not p.estado %}-slash text-danger{% else %} text-success{% endif %}"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="modalEditar{{ p.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content card-dark border-secondary text-white">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title"><i class="fa-solid fa-pen text-info"></i> Editar Producto</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ url_for('proveedor.editar_producto', id=p.id) }}" method="POST" enctype="multipart/form-data">
+                                    <div class="modal-body text-start">
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Categoria</label>
+                                            <select class="form-select bg-dark text-white border-secondary" name="categoria_id" required>
+                                                {% for c in categorias %}
+                                                    <option value="{{ c.id }}" {% if c.id == p.categoria_id %}selected{% endif %}>{{ c.nombre }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Tipo de Producto</label>
+                                            <select class="form-select bg-dark text-white border-secondary" name="tipo_producto" required>
+                                                <option value="Cuenta Completa" {% if p.tipo_producto == 'Cuenta Completa' %}selected{% endif %}>Cuenta Completa</option>
+                                                <option value="Perfil Individual" {% if p.tipo_producto == 'Perfil Individual' %}selected{% endif %}>Perfil Individual</option>
+                                                <option value="Licencia" {% if p.tipo_producto == 'Licencia' %}selected{% endif %}>Licencia</option>
+                                                <option value="Invitacion" {% if p.tipo_producto == 'Invitacion' %}selected{% endif %}>Invitacion</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Tipo de Renovación</label>
+                                            <div class="d-flex gap-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="es_renovable" id="editar_renovable1{{ p.id }}" value="True" {% if p.es_renovable %}checked{% endif %}>
+                                                    <label class="form-check-label text-success" for="editar_renovable1{{ p.id }}">
+                                                        <i class="fa-solid fa-rotate"></i> Renovable
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="es_renovable" id="editar_renovable2{{ p.id }}" value="False" {% if not p.es_renovable %}checked{% endif %}>
+                                                    <label class="form-check-label text-secondary" for="editar_renovable2{{ p.id }}">
+                                                        <i class="fa-solid fa-xmark"></i> No Renovable
+                                                    </label>
+                                                </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Tipo de Entrega al Cliente</label>
+                                            <select class="form-select bg-dark text-white border-secondary" name="tipo_entrega" required>
+                                                <option value="credenciales" {% if p.tipo_entrega == 'credenciales' %}selected{% endif %}>Entrega automática</option>
+                                                <option value="codigo" {% if p.tipo_entrega == 'codigo' %}selected{% endif %}>Activación por código</option>
+                                                <option value="cliente_propio" {% if p.tipo_entrega == 'cliente_propio' %}selected{% endif %}>Activación a dominio</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Nombre (Ej: Netflix Premium 4K)</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_producto" value="{{ p.nombre_producto }}" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label text-secondary small">Precio de Venta (S/)</label>
+                                                <input type="number" step="0.01" class="form-control bg-dark text-white border-secondary text-success fw-bold" name="precio" value="{{ p.precio }}" required>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label text-secondary small">Imagen del Producto</label>
+                                                <input type="file" class="form-control bg-dark text-white border-secondary" name="imagen" accept="image/*">
+                                                <small class="text-secondary" style="font-size: 0.7rem;">(Dejar en blanco para mantener la actual)</small>
+                                            </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Descripcion / Reglas</label>
+                                            <textarea class="form-control bg-dark text-white border-secondary" name="descripcion" rows="2">{{ p.descripcion }}</textarea>
+                                        </div>
+                                    <div class="modal-footer border-secondary">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-info text-dark fw-bold">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-secondary">
+                            <i class="fa-solid fa-box-open fa-3x mb-3"></i><br>
+                            Aun no tienes productos registrados. Crea el primero!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+</div>
+
+<div class="modal fade" id="modalNuevoProducto" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-secondary text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fa-solid fa-plus text-cyber"></i> Agregar Producto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('proveedor.nuevo_producto') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Categoria del Servicio</label>
+                        <select class="form-select bg-dark text-white border-secondary" name="categoria_id" required>
+                            <option value="" disabled selected>-- Selecciona una categoria --</option>
+                            {% for c in categorias %}
+                                <option value="{{ c.id }}">{{ c.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Tipo de Producto</label>
+                        <select class="form-select bg-dark text-white border-secondary" name="tipo_producto" required>
+                            <option value="Cuenta Completa">Cuenta Completa</option>
+                            <option value="Perfil Individual">Perfil Individual</option>
+                            <option value="Licencia">Licencia</option>
+                            <option value="Invitacion">Invitacion</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Tipo de Renovación</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="es_renovable" id="renovable1" value="True">
+                                <label class="form-check-label text-success" for="renovable1">
+                                    <i class="fa-solid fa-rotate"></i> Renovable
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="es_renovable" id="renovable2" value="False" checked>
+                                <label class="form-check-label text-secondary" for="renovable2">
+                                    <i class="fa-solid fa-xmark"></i> No Renovable
+                                </label>
+                            </div>
+                        <small class="text-secondary" style="font-size: 0.7rem;">Los productos renovables se pueden renovar mensualmente.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Tipo de Entrega al Cliente</label>
+                        <select class="form-select bg-dark text-white border-secondary" name="tipo_entrega" required>
+                            <option value="credenciales">Entrega automática</option>
+                            <option value="codigo">Activación por código</option>
+                            <option value="cliente_propio">Activación a dominio</option>
+                        </select>
+                        <small class="text-secondary" style="font-size: 0.7rem;">Selecciona cómo se entregara el producto al cliente.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Nombre del Servicio (Ej: Netflix Premium)</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_producto" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-secondary small">Precio (S/)</label>
+                            <input type="number" step="0.01" class="form-control bg-dark text-white border-secondary text-success fw-bold" name="precio" placeholder="0.00" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-secondary small">Subir Imagen</label>
+                            <input type="file" class="form-control bg-dark text-white border-secondary" name="imagen" accept="image/*">
+                        </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Descripcion / Reglas</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" name="descripcion" rows="2" placeholder="Ej: Cuenta renovable, soporte 24/7..."></textarea>
+                    </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-custom">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+</div>
+
+<script>
+    document.getElementById('buscador').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-producto');
+        filas.forEach(function(fila) {
+            let textoFila = fila.innerText.toLowerCase();
+            fila.style.display = textoFila.includes(filtro) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

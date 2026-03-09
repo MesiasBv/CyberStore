@@ -1,0 +1,51 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Editar Venta{% endblock %}
+{% block page_title %}Editar Venta{% endblock %}
+
+{% block content %}
+<div class="card card-dark border-0 shadow" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header border-secondary bg-transparent py-3 text-center">
+        <h5 class="mb-0 text-white">
+            <i class="fa-solid fa-pen-to-square text-cyber"></i> Editar Venta
+        </h5>
+        <p class="text-secondary small m-0">Actualiza la informacion de la venta.</p>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('proveedor.editar_venta', id=venta.id) }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label text-secondary">Cliente</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ venta.cliente.nombre_completo }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary">Producto</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ venta.producto.nombre_producto }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary">Correo Entregado</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" 
+                       value="{{ venta.inventario_entregado.correo_acceso if venta.inventario_entregado else 'N/A' }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary">Fecha de Venta</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary" 
+                       value="{{ venta.fecha_venta.strftime('%Y-%m-%d %H:%M') if venta.fecha_venta else 'N/A' }}" readonly>
+            </div>
+            <hr class="border-secondary">
+            <div class="mb-3">
+                <label class="form-label text-secondary">Precio Final (S/)</label>
+                <input type="number" step="0.01" class="form-control bg-dark text-white border-secondary" 
+                       name="precio_final" value="{{ venta.precio_final }}" required>
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('proveedor.mis_ventas') }}" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> Volver
+                </a>
+                <button type="submit" class="btn btn-cyber">
+                    <i class="fa-solid fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

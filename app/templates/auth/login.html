@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión - CyberStore{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card card-dark shadow-lg border-0">
+            <div class="card-header text-center pt-4 pb-0 border-0 bg-transparent">
+                <i class="fa-solid fa-user-shield fa-3x text-cyber mb-3"></i>
+                <h3 class="fw-bold text-white">Bienvenido de vuelta</h3>
+                <p class="text-secondary">Ingresa tus credenciales para continuar</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form action="{{ url_for('auth.login') }}" method="POST">
+                                        
+                    <div class="mb-3">
+                        <label for="identificador" class="form-label text-secondary"><i class="fa-solid fa-user"></i> Usuario o Correo</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="identificador" name="identificador" placeholder="Tu usuario o ejemplo@correo.com" required autofocus>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label text-secondary"><i class="fa-solid fa-lock"></i> Contraseña</label>
+                        <input type="password" class="form-control bg-dark text-white border-secondary" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary-custom btn-lg">
+                            <i class="fa-solid fa-right-to-bracket"></i> Ingresar al Sistema
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card-footer text-center pb-4 border-0 bg-transparent">
+                <span class="text-secondary">¿No tienes una cuenta? </span>
+                <a href="{{ url_for('auth.registro') }}" class="text-cyber text-decoration-none fw-bold">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus {
+        background-color: #212529;
+        color: white;
+        border-color: #00d26a;
+        box-shadow: 0 0 0 0.25rem rgba(0, 210, 106, 0.25);
+    }
+</style>
+{% endblock %}

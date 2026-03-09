@@ -1,0 +1,178 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Gestión de Administradores - CyberStore{% endblock %}
+{% block page_title %}Directorio de Administradores{% endblock %}
+
+{% block content %}
+<div class="card card-dark border-0 shadow-lg">
+    <div class="card-header border-secondary d-flex justify-content-between align-items-center py-3 bg-transparent">
+        <h5 class="mb-0 text-white"><i class="fa-solid fa-user-shield text-cyber"></i> Equipo Administrativo</h5>
+        <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoAdmin">
+            <i class="fa-solid fa-plus"></i> Nuevo Admin
+        </button>
+    </div>
+    
+    <div class="p-3 border-bottom border-secondary bg-dark">
+        <div class="input-group">
+            <span class="input-group-text bg-transparent text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" id="buscador" class="form-control bg-transparent text-white border-secondary" placeholder="Buscar por usuario o correo...">
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Rol</th>
+                        <th>Nombre de Usuario</th>
+                        <th>Correo (Para 2FA)</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in admins %}
+                    <tr class="fila-admin">
+                        <td class="ps-4 text-secondary">#{{ a.id }}</td>
+                        <td class="text-warning fw-bold"><i class="fa-solid fa-star"></i> {{ a.rol }}</td>
+                        <td class="text-info">@{{ a.nombre_usuario }}
+                            {% if a.id == session.get('usuario_id') %}
+                                <span class="badge bg-secondary ms-1">Tú</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ a.correo }}</td>
+                        <td>
+                            {% if a.estado %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#modalEditar{{ a.id }}" title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            
+                            {% if a.id != session.get('usuario_id') %}
+                            <a href="{{ url_for('admin.estado_administrador', id=a.id) }}" class="btn btn-sm btn-outline-light" title="Bloquear/Desbloquear">
+                                <i class="fa-solid fa-power-off {% if a.estado %}text-danger{% else %}text-success{% endif %}"></i>
+                            </a>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-secondary disabled" title="No puedes desactivarte a ti mismo"><i class="fa-solid fa-power-off"></i></button>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="modalEditar{{ a.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content card-dark border-secondary text-white">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title"><i class="fa-solid fa-user-shield text-info"></i> Editar Admin</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form action="{{ url_for('admin.editar_administrador', id=a.id) }}" method="POST">
+                                    <div class="modal-body text-start">
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Nombre de Usuario</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_usuario" value="{{ a.nombre_usuario }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Correo Electrónico (Para recibir el 2FA)</label>
+                                            <input type="email" class="form-control bg-dark text-white border-secondary" name="correo" value="{{ a.correo }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Nueva Contraseña</label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control bg-dark text-white border-secondary" name="password" id="passEditAdmin{{ a.id }}" placeholder="(Dejar en blanco para no cambiar)">
+                                                <button class="btn btn-outline-secondary border-secondary text-secondary" type="button" onclick="togglePassword('passEditAdmin{{ a.id }}', this)">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-secondary">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-info text-dark fw-bold">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoAdmin" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-secondary text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fa-solid fa-user-plus text-cyber"></i> Registrar Administrador</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.nuevo_administrador') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Nombre de Usuario</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_usuario" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Correo Electrónico</label>
+                        <input type="email" class="form-control bg-dark text-white border-secondary" name="correo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Contraseña</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control bg-dark text-white border-secondary" name="password" id="passNuevoAdmin" required>
+                            <button class="btn btn-outline-secondary border-secondary text-secondary" type="button" onclick="togglePassword('passNuevoAdmin', this)">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-custom">Crear Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Buscador
+    document.getElementById('buscador').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-admin');
+
+        filas.forEach(function(fila) {
+            let textoFila = fila.innerText.toLowerCase();
+            if (textoFila.includes(filtro)) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    });
+
+    // Mostrar/Ocultar contraseña
+    function togglePassword(inputId, boton) {
+        let input = document.getElementById(inputId);
+        let icono = boton.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icono.classList.remove('fa-eye');
+            icono.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icono.classList.remove('fa-eye-slash');
+            icono.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}

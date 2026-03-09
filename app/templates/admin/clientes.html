@@ -1,0 +1,154 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Gestión de Clientes - CyberStore{% endblock %}
+{% block page_title %}Directorio de Clientes{% endblock %}
+
+{% block content %}
+<div class="card card-dark border-0 shadow-lg">
+    <div class="card-header border-secondary py-3 bg-transparent">
+        <h5 class="mb-0 text-white"><i class="fa-solid fa-users text-cyber"></i> Lista de Clientes Registrados</h5>
+    </div>
+    
+    <div class="p-3 border-bottom border-secondary bg-dark">
+        <div class="input-group">
+            <span class="input-group-text bg-transparent text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" id="buscador" class="form-control bg-transparent text-white border-secondary" placeholder="Buscar por nombre, usuario, correo o WhatsApp...">
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Nombre Completo</th>
+                        <th>Usuario</th>
+                        <th>Correo</th>
+                        <th>WhatsApp</th>
+                        <th>Saldo (Billetera)</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr class="fila-cliente">
+                        <td class="ps-4 text-secondary">#{{ c.id }}</td>
+                        <td class="fw-bold text-white">{{ c.nombre_completo }}</td>
+                        <td class="text-info">@{{ c.nombre_usuario }}</td>
+                        <td>{{ c.correo }}</td>
+                        <td>{{ c.telefono_whatsapp or 'N/A' }}</td>
+                        <td class="text-cyber fw-bold">S/ {{ "%.2f"|format(c.saldo) }}</td>
+                        <td>
+                            {% if c.estado %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#modalSaldo{{ c.id }}" title="Editar Saldo">
+                                <i class="fa-solid fa-wallet"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#modalEditar{{ c.id }}" title="Editar Perfil">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <a href="{{ url_for('admin.estado_cliente', id=c.id) }}" class="btn btn-sm btn-outline-light" title="Bloquear/Desbloquear">
+                                <i class="fa-solid fa-power-off {% if c.estado %}text-danger{% else %}text-success{% endif %}"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <div class="modal fade" id="modalSaldo{{ c.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content card-dark border-warning text-white">
+                                <div class="modal-header border-warning">
+                                    <h5 class="modal-title text-warning fw-bold"><i class="fa-solid fa-plus-circle"></i> Recargar Billetera</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ url_for('admin.recargar_saldo_cliente', id=c.id) }}" method="POST">
+                                    <div class="modal-body text-center">
+                                        <p class="small text-secondary mb-1">Saldo actual: <span class="text-success fw-bold">S/ {{ "%.2f"|format(c.saldo) }}</span></p>
+                                        <p class="small text-white mb-3">Monto a recargar para:<br><strong>{{ c.nombre_completo }}</strong></p>
+                                        
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text bg-dark border-secondary text-success fw-bold">S/</span>
+                                            <input type="number" step="0.01" class="form-control bg-dark text-white border-secondary fs-4 text-center fw-bold" name="monto" placeholder="0.00" required autofocus>
+                                        </div>
+                                        <small class="text-muted">Este monto se sumará al saldo actual.</small>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">CONFIRMAR RECARGA</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="modalEditar{{ c.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content card-dark border-secondary text-white">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title"><i class="fa-solid fa-user-pen text-info"></i> Editar Cliente</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form action="{{ url_for('admin.editar_cliente', id=c.id) }}" method="POST">
+                                    <div class="modal-body text-start">
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Nombre Completo</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_completo" value="{{ c.nombre_completo }}" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label text-secondary small">Usuario</label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_usuario" value="{{ c.nombre_usuario }}" required>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label text-secondary small">Resetear Contraseña</label>
+                                                <input type="password" class="form-control bg-dark text-white border-secondary" name="password" placeholder="(Dejar en blanco para no cambiar)">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Correo Electrónico</label>
+                                            <input type="email" class="form-control bg-dark text-white border-secondary" name="correo" value="{{ c.correo }}" required>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label text-secondary small">WhatsApp</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="telefono_whatsapp" value="{{ c.telefono_whatsapp or '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-secondary">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-info text-dark fw-bold">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-secondary">
+                            <i class="fa-solid fa-users-slash fa-3x mb-3"></i><br>
+                            Aún no tienes clientes registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('buscador').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-cliente');
+
+        filas.forEach(function(fila) {
+            let textoFila = fila.innerText.toLowerCase();
+            fila.style.display = textoFila.includes(filtro) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

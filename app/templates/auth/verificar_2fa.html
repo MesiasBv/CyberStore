@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Verificación de Seguridad - CyberStore{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-dark shadow-lg border-0 text-center">
+            <div class="card-header pt-4 pb-0 border-0 bg-transparent">
+                <i class="fa-solid fa-envelope-open-text fa-3x text-cyber mb-3"></i>
+                <h4 class="fw-bold text-white">Verificación de 2 Pasos</h4>
+                <p class="text-secondary small">Hemos enviado un código de 6 dígitos a tu bandeja de entrada.</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form action="{{ url_for('auth.verificar_2fa') }}" method="POST">
+                    <div class="mb-4">
+                        <input type="text" class="form-control form-control-lg bg-dark text-white border-secondary text-center fw-bold fs-3" id="codigo" name="codigo" placeholder="000000" maxlength="6" required autofocus autocomplete="off" style="letter-spacing: 10px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary-custom w-100 btn-lg">
+                        <i class="fa-solid fa-shield-check"></i> Verificar y Entrar
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card-footer pb-4 border-0 bg-transparent">
+                <a href="{{ url_for('auth.login') }}" class="text-secondary text-decoration-none small"><i class="fa-solid fa-arrow-left"></i> Volver al Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus {
+        background-color: #212529;
+        color: white;
+        border-color: #00d26a;
+        box-shadow: 0 0 0 0.25rem rgba(0, 210, 106, 0.25);
+    }
+</style>
+{% endblock %}

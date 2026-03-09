@@ -1,0 +1,173 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Gestión de Proveedores - CyberStore{% endblock %}
+{% block page_title %}Directorio de Proveedores{% endblock %}
+
+{% block content %}
+<div class="card card-dark border-0 shadow-lg">
+    <div class="card-header border-secondary d-flex justify-content-between align-items-center py-3 bg-transparent">
+        <h5 class="mb-0 text-white"><i class="fa-solid fa-truck-fast text-cyber"></i> Lista de Proveedores</h5>
+        <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoProveedor">
+            <i class="fa-solid fa-plus"></i> Nuevo Proveedor
+        </button>
+    </div>
+    
+    <div class="p-3 border-bottom border-secondary bg-dark">
+        <div class="input-group">
+            <span class="input-group-text bg-transparent text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" id="buscador" class="form-control bg-transparent text-white border-secondary" placeholder="Buscar por nombre, usuario, correo o teléfono...">
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0" id="tablaProveedores">
+                <thead class="text-secondary">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Empresa / Nombre</th>
+                        <th>Usuario</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in proveedores %}
+                    <tr class="fila-proveedor">
+                        <td class="ps-4 text-secondary">#{{ p.id }}</td>
+                        <td class="fw-bold text-white">{{ p.nombre }}</td>
+                        <td class="text-info">@{{ p.nombre_usuario }}</td>
+                        <td>{{ p.correo }}</td>
+                        <td>{{ p.telefono_contacto }}</td>
+                        <td>
+                            {% if p.estado %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#modalEditar{{ p.id }}" title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <a href="{{ url_for('admin.estado_proveedor', id=p.id) }}" class="btn btn-sm btn-outline-light" title="Activar/Desactivar">
+                                <i class="fa-solid fa-power-off {% if p.estado %}text-danger{% else %}text-success{% endif %}"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="modalEditar{{ p.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content card-dark border-secondary text-white">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title"><i class="fa-solid fa-pen text-info"></i> Editar Proveedor</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form action="{{ url_for('admin.editar_proveedor', id=p.id) }}" method="POST">
+                                    <div class="modal-body text-start">
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Nombre de la Empresa o Persona</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre" value="{{ p.nombre }}" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label text-secondary small">Nombre de Usuario</label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_usuario" value="{{ p.nombre_usuario }}" required>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label text-secondary small">Nueva Contraseña</label>
+                                                <input type="password" class="form-control bg-dark text-white border-secondary" name="password" placeholder="(Dejar en blanco para no cambiar)">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary small">Correo Electrónico</label>
+                                            <input type="email" class="form-control bg-dark text-white border-secondary" name="correo" value="{{ p.correo }}" required>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label text-secondary small">Teléfono / WhatsApp</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="telefono_contacto" value="{{ p.telefono_contacto }}">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-secondary">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-info text-dark fw-bold">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-secondary">
+                            <i class="fa-solid fa-folder-open fa-3x mb-3"></i><br>
+                            Aún no tienes proveedores registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoProveedor" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-secondary text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fa-solid fa-user-plus text-cyber"></i> Registrar Proveedor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.nuevo_proveedor') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Nombre de la Empresa o Persona</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-secondary small">Nombre de Usuario</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_usuario" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-secondary small">Contraseña Temporal</label>
+                            <input type="password" class="form-control bg-dark text-white border-secondary" name="password" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small">Correo Electrónico (Para recibir el 2FA)</label>
+                        <input type="email" class="form-control bg-dark text-white border-secondary" name="correo" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label text-secondary small">Teléfono / WhatsApp</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" name="telefono_contacto">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-custom">Guardar Proveedor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('buscador').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase(); // Convertimos todo a minúsculas
+        let filas = document.querySelectorAll('.fila-proveedor'); // Seleccionamos solo las filas de datos
+
+        filas.forEach(function(fila) {
+            let textoFila = fila.innerText.toLowerCase(); // Obtenemos el texto de la fila completa
+            
+            // Si el texto de la fila incluye lo que escribimos, la mostramos. Si no, la ocultamos.
+            if (textoFila.includes(filtro)) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

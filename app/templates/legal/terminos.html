@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Términos y Condiciones - CyberStore{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card-dark p-4 p-lg-5 border border-secondary" style="border-radius: 15px; box-shadow: 0 0 20px rgba(0, 210, 106, 0.1);">
+                <h2 class="text-cyber fw-bold mb-4">
+                    <i class="fa-solid fa-gavel me-2"></i>Términos y Condiciones
+                </h2>
+                
+                <div class="text-muted mb-4">
+                    <i class="fa-solid fa-calendar me-2"></i>Última actualización: Marzo 2026
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <!-- Introducción -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">1. Introducción</h5>
+                    <p class="text-secondary">
+                        Bienvenido a CyberStore. Al acceder y utilizar nuestra plataforma, usted acepta cumplir con los siguientes Términos y Condiciones. Si no está de acuerdo con alguno de estos términos, por favor no utilice nuestros servicios.
+                    </p>
+                </div>
+
+                <!-- Licencia de Uso -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">2. Licencia de Uso para Revendedores</h5>
+                    <p class="text-secondary">
+                        Se otorga al Cliente el derecho de uso de las credenciales adquiridas. 
+                        <strong>Se permite explícitamente la redistribución bajo responsabilidad del Cliente (Revendedor)</strong>. 
+                        El Cliente puede comercializar los productos adquiridos a terceros, siempre bajo su propia responsabilidad.
+                    </p>
+                </div>
+
+                <!-- Garantía Limitada -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">3. Garantía Limitada</h5>
+                    <p class="text-secondary">
+                        CyberStore garantiza el funcionamiento de la cuenta al momento de la entrega. 
+                        El Cliente tiene la obligación de verificar el funcionamiento de las credenciales recibidas.
+                    </p>
+                    <div class="alert alert-warning border-warning" style="background-color: rgba(255, 193, 7, 0.1);">
+                        <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>
+                        <strong>Importante:</strong> Si el Revendedor cambia los datos de acceso originales (correo y contraseña), la garantía queda automáticamente anulada.
+                    </div>
+                </div>
+
+                <!-- Billetera y Saldo -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">4. Billetera Virtual y Saldo</h5>
+                    <p class="text-secondary">
+                        El saldo cargado en la billetera virtual (ej. S/ 19.00) 
+                        <strong>no es reembolsable en efectivo</strong>, solo canjeable por productos dentro del sistema CyberStore.
+                        El saldo puede utilizarse para comprar cualquier producto disponible en el catálogo.
+                    </p>
+                </div>
+
+                <!-- Conducta del Proveedor -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">5. Conducta del Proveedor</h5>
+                    <p class="text-secondary">
+                        Los Proveedores registrados en CyberStore se comprometen a:
+                    </p>
+                    <ul class="text-secondary" style="list-style: none;">
+                        <li class="mb-2"><i class="fa-solid fa-check text-cyber me-2"></i>Mantener stock real y funcional</li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-cyber me-2"></i>Entregar credenciales válidas y activas</li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-cyber me-2"></i>Responder rápidamente a consultas de clientes</li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-cyber me-2"></i>No proporcionar credenciales falsas o vencidas</li>
+                    </ul>
+                    <div class="alert alert-danger border-danger" style="background-color: rgba(220, 53, 69, 0.1);">
+                        <i class="fa-solid fa-ban me-2 text-danger"></i>
+                        <strong>Sanción:</strong> Los proveedores que entreguen credenciales falsas serán suspendidos permanentemente de la plataforma.
+                    </div>
+                </div>
+
+                <!-- Responsabilidad -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">6. Limitación de Responsabilidad</h5>
+                    <p class="text-secondary">
+                        CyberStore actua como intermediario entre Proveedores y Clientes. No somos responsables del uso que los Clientes den a las credenciales adquiridas. 
+                        El Cliente es el único responsable de cualquier actividad realizada con las cuentas compradas.
+                    </p>
+                </div>
+
+                <!-- Modificaciones -->
+                <div class="mb-4">
+                    <h5 class="text-white fw-bold">7. Modificaciones</h5>
+                    <p class="text-secondary">
+                        CyberStore se reserva el derecho de modificar estos términos en cualquier momento. 
+                        Los cambios entrarán en vigor desde su publicación en esta página.
+                    </p>
+                </div>
+
+                <!-- Contacto -->
+                <div class="mt-5 p-4 rounded-3" style="background-color: rgba(0, 210, 106, 0.1); border: 1px solid #00d26a;">
+                    <h6 class="text-cyber fw-bold">
+                        <i class="fa-solid fa-headset me-2"></i>¿Necesitas ayuda?
+                    </h6>
+                    <p class="text-secondary mb-0">
+                        Si tienes alguna duda sobre nuestros términos, contáctanos a través de nuestro 
+                        <a href="{{ url_for('public.ayuda') }}" class="text-cyber">Centro de Ayuda</a> 
+                        o por WhatsApp.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

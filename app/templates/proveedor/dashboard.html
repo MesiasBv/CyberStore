@@ -1,0 +1,96 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Mi Panel - Proveedor{% endblock %}
+{% block page_title %}Mi Resumen de Ventas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card card-dark border-0 shadow text-center p-3 border-bottom border-cyber border-3">
+            <h1 class="text-cyber"><i class="fa-solid fa-handshake"></i></h1>
+            <h3 class="text-white mt-2">{{ cuentas_vendidas }}</h3>
+            <p class="text-secondary m-0">Cuentas Vendidas Hoy</p>
+            <small class="text-muted">{{ fecha_hoy.strftime('%d/%m/%Y') }}</small>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card card-dark border-0 shadow text-center p-3 border-bottom border-success border-3">
+            <h1 class="text-success"><i class="fa-solid fa-sack-dollar"></i></h1>
+            <h3 class="text-white mt-2">S/ {{ "%.2f"|format(ingresos_hoy) }}</h3>
+            <p class="text-secondary m-0">Ingresos de Hoy</p>
+            <small class="text-muted">{{ fecha_hoy.strftime('%d/%m/%Y') }}</small>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card card-dark border-0 shadow text-center p-3 border-bottom border-info border-3">
+            <h1 class="text-info"><i class="fa-solid fa-boxes-stacked"></i></h1>
+            <h3 class="text-white mt-2">{{ stock_disponible }}</h3>
+            <p class="text-secondary m-0">Mi Stock Disponible</p>
+        </div>
+    </div>
+</div>
+
+<!-- NUEVO: Totales Históricos -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-warning"><i class="fa-solid fa-chart-line"></i></h1>
+            <h3 class="text-white mt-2">{{ ventas_totales_count }}</h3>
+            <p class="text-secondary m-0">Ventas Totales (Histórico)</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-primary"><i class="fa-solid fa-wallet"></i></h1>
+            <h3 class="text-white mt-2">S/ {{ "%.2f"|format(ingresos_totales) }}</h3>
+            <p class="text-secondary m-0">Ingresos Totales (Histórico)</p>
+        </div>
+    </div>
+</div>
+
+<div class="card card-dark border-0 shadow mt-2">
+    <div class="card-header border-secondary bg-transparent py-3">
+        <h5 class="mb-0 text-white"><i class="fa-solid fa-clock-rotate-left text-cyber"></i> Historial de Ventas</h5>
+        <p class="text-secondary small m-0">Aquí aparecen todas tus ventas realizadas.</p>
+    </div>
+    <div class="card-body p-0">
+        {% if ventas_historial %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead class="bg-secondary">
+                    <tr>
+                        <th class="text-center">Tipo</th>
+                        <th>Producto</th>
+                        <th>Cliente</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-center">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas_historial %}
+                    <tr>
+                        <td class="text-center">
+                            {% if venta.tipo == 'Venta' %}
+                            <span class="badge bg-primary">Venta</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Servicio</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold">{{ venta.producto }}</td>
+                        <td>{{ venta.cliente }}</td>
+                        <td class="text-end text-success fw-bold">S/ {{ "%.2f"|format(venta.precio) }}</td>
+                        <td class="text-center text-secondary">{{ venta.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-secondary">
+            <i class="fa-solid fa-receipt fa-3x mb-3 text-secondary" style="opacity: 0.5;"></i><br>
+            Aún no tienes ventas registradas.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

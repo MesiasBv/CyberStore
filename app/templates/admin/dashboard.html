@@ -1,0 +1,30 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Dashboard - Panel Admin{% endblock %}
+{% block page_title %}Resumen del Sistema{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-cyber"><i class="fa-solid fa-users"></i></h1>
+            <h3 class="text-white mt-2">0</h3>
+            <p class="text-secondary m-0">Clientes Activos</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-warning"><i class="fa-solid fa-wallet"></i></h1>
+            <h3 class="text-white mt-2">$0.00</h3>
+            <p class="text-secondary m-0">Ingresos Totales</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-info"><i class="fa-solid fa-key"></i></h1>
+            <h3 class="text-white mt-2">0</h3>
+            <p class="text-secondary m-0">Cuentas en Stock</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+
+{% block title %}Catálogo - CyberStore{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .bg-cyber { background-color: #00d26a !important; }
+    #loading-spinner { display: none; }
+    .product-grid { min-height: 200px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>
+    let timeout = null;
+    
+    // Función para buscar productos en tiempo real sin recargar la página
+    function buscarProductos() {
+        clearTimeout(timeout);
+        timeout = setTimeout(function() {
+            const busqueda = document.querySelector('input[name="busqueda"]').value;
+            const categoria = document.querySelector('select[name="categoria"]').value;
+            const orden = document.querySelector('select[name="orden"]').value;
+            
+            // Mostrar spinner de carga
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const productosContainer = document.getElementById('productos-container');
+            
+            if (loadingSpinner) loadingSpinner.style.display = 'block';
+            if (productosContainer) productosContainer.style.opacity = '0.5';
+            
+            // Construir URL para la búsqueda
+            let url = "{{ url_for('public.buscar_productos') }}?";
+            if (busqueda) url += 'busqueda=' + encodeURIComponent(busqueda) + '&';
+            if (categoria) url += 'categoria=' + categoria + '&';
+            if (orden) url += 'orden=' + orden;
+            
+            // Hacer búsqueda AJAX
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Actualizar los resultados
+                    actualizarResultados(data);
+                })
+                .catch(error => console.error('Error:', error))
+                .finally(() => {
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                    if (productosContainer) productosContainer.style.opacity = '1';
+                });
+        }, 300);
+    }
+    
+    // Función para cargar productos iniciales al abrir la página
+    function cargarProductosIniciales() {
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const productosContainer = document.getElementById('productos-container');
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'block';
+        if (productosContainer) productosContainer.style.opacity = '0.5';
+        
+        fetch("{{ url_for('public.buscar_productos') }}?orden=default")
+            .then(response => response.json())
+            .then(data => {
+                actualizarResultados(data);
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => {
+                if (loadingSpinner) loadingSpinner.style.display = 'none';
+                if (productosContainer) productosContainer.style.opacity = '1';
+            });
+    }
+    
+    // Función para actualizar los resultados en la página
+    function actualizarResultados(data) {
+        const container = document.getElementById('productos-container');
+        const countSpan = document.getElementById('result-count');
+        
+        if (countSpan) countSpan.textContent = data.productos.length;
+        
+        if (!container) return;
+        
+        if (data.productos.length === 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="fa-solid fa-store-slash fa-4x text-secondary mb-3"></i>
+                    <h4 class="text-secondary">No se encontraron productos</h4>
+                    <p class="text-secondary">Intenta con otros términos de búsqueda o selecciona otra categoría</p>
+                    <button onclick="limpiarFiltros()" class="btn btn-cyber mt-2">
+                        <i class="fa-solid fa-refresh me-1"></i> Ver todos los productos
+                    </button>
+                </div>`;
+            return;
+        }
+        
+        let html = '';
+        
+        data.productos.forEach(function(p) {
+            const stockBadge = p.stock > 0 
+                ? `<span class="badge bg-dark border border-cyber text-cyber ms-1"><i class="fa-solid fa-layer-group small"></i> Stock: ${p.stock}</span>`
+                : `<span class="badge bg-danger border border-danger text-white ms-1"><i class="fa-solid fa-xmark small"></i> Sin Stock</span>`;
+            
+            const renovableBadge = p.es_renovable 
+                ? `<span class="badge bg-success border border-success ms-1"><i class="fa-solid fa-rotate me-1"></i> Renovable</span>`
+                : `<span class="badge bg-secondary border border-secondary ms-1"><i class="fa-solid fa-xmark me-1"></i> No Renovable</span>`;
+            
+            const tipoProductoBadge = p.tipo_producto === 'Cuenta Completa' || p.tipo_producto === 'Cuenta Compartida' || p.tipo_producto === 'Licencia'
+                ? `<span class="badge bg-warning">${p.tipo_producto}</span>`
+                : `<span class="badge bg-warning">${p.tipo_producto}</span>`;
+            
+            const tipoEntregaBadge = p.tipo_entrega === 'credenciales' 
+                ? `<span class="badge bg-info">Entrega Automática</span>`
+                : p.tipo_entrega === 'codigo' 
+                    ? `<span class="badge bg-info">Activación por Código</span>`
+                    : p.tipo_entrega === 'cliente_propio'
+                        ? `<span class="badge bg-info">Activación a Dominio</span>`
+                        : `<span class="badge bg-info">${p.tipo_entrega}</span>`;
+            
+            const botonComprar = p.stock > 0
+                ? `<button class="btn btn-outline-success mt-auto" data-bs-toggle="modal" data-bs-target="#modalCompra${p.id}">
+                    <i class="fa-solid fa-cart-plus"></i> Comprar Ahora
+                   </button>`
+                : `<button class="btn btn-secondary mt-auto" disabled>
+                    <i class="fa-solid fa-x-circle"></i> Agotado
+                   </button>`;
+            
+            const imagen = p.imagen_url 
+                ? `<img src="/static/${p.imagen_url}" class="card-img-top object-fit-cover border-bottom border-secondary" style="aspect-ratio: 1/1;">`
+                : `<div class="card-img-top bg-secondary d-flex align-items-center justify-content-center border-bottom border-secondary" style="aspect-ratio: 1/1;">
+                    <i class="fa-solid fa-image fa-3x text-dark"></i>
+                   </div>`;
+            
+            html += `
+            <div class="col-md-3 mb-4">
+                <div class="card card-dark border-0 shadow h-100">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#modalDetalle${p.id}">
+                        ${imagen}
+                    </a>
+                    <div class="card-body d-flex flex-column text-center">
+                        <div class="mb-2">
+                            <span class="badge bg-dark border border-secondary text-info">${p.categoria_nombre}</span>
+                            ${stockBadge}
+                        </div>
+                        <h5 class="card-title text-white fw-bold">${p.nombre_producto}</h5>
+                        <div class="mb-2">
+                            <span class="badge bg-secondary border border-secondary">
+                                <i class="fa-solid fa-store me-1"></i> ${p.proveedor_nombre}
+                            </span>
+                            ${renovableBadge}
+                            ${tipoProductoBadge}
+                            ${tipoEntregaBadge}
+                        </div>
+                        <h4 class="text-success fw-bold my-3">S/ ${p.precio}</h4>
+                        ${botonComprar}
+                    </div>
+                </div>
+            </div>`;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    // Función para limpiar filtros
+    function limpiarFiltros() {
+        const inputBusqueda = document.querySelector('input[name="busqueda"]');
+        const selectCategoria = document.querySelector('select[name="categoria"]');
+        const selectOrden = document.querySelector('select[name="orden"]');
+        
+        if (inputBusqueda) inputBusqueda.value = '';
+        if (selectCategoria) selectCategoria.value = '';
+        if (selectOrden) selectOrden.value = 'default';
+        
+        buscarProductos();
+    }
+    
+    // Agregar eventos a los inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputBusqueda = document.querySelector('input[name="busqueda"]');
+        const selectCategoria = document.querySelector('select[name="categoria"]');
+        const selectOrden = document.querySelector('select[name="orden"]');
+        
+        if (inputBusqueda) {
+            inputBusqueda.addEventListener('input', buscarProductos);
+        }
+        
+        if (selectCategoria) {
+            selectCategoria.addEventListener('change', buscarProductos);
+        }
+        
+        if (selectOrden) {
+            selectOrden.addEventListener('change', buscarProductos);
+        }
+        
+        // Cargar productos iniciales al abrir la página
+        cargarProductosIniciales();
+    });
+</script>
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold text-white"><i class="fa-solid fa-store text-cyber"></i> Catálogo de Productos</h2>
+        <p class="text-secondary">Explora todos nuestros productos disponibles</p>
+    </div>
+</div>
+
+<!-- Buscador, Filtro por Categoría y Ordenamiento -->
+<div class="card card-dark border-0 shadow mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <!-- Buscador -->
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary">
+                        <i class="fa-solid fa-search"></i>
+                    </span>
+                    <input type="text" class="form-control bg-dark border-secondary text-white" 
+                           name="busqueda" placeholder="Buscar productos...">
+                </div>
+            </div>
+            
+            <!-- Filtro por Categoría -->
+            <div class="col-md-4">
+                <select class="form-select bg-dark border-secondary text-white" name="categoria">
+                    <option value="">Todas las categorías</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Ordenar por -->
+            <div class="col-md-3">
+                <select class="form-select bg-dark border-secondary text-white" name="orden">
+                    <option value="default">Más Recientes</option>
+                    <option value="precio_asc">Precio: Menor a Mayor</option>
+                    <option value="precio_desc">Precio: Mayor a Menor</option>
+                    <option value="nombre_asc">Nombre: A - Z</option>
+                    <option value="nombre_desc">Nombre: Z - A</option>
+                    <option value="mas_vendidos">Más Vendidos</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Botones rápidos de categorías -->
+        <div class="mt-3">
+            <span class="text-secondary small me-2">Categorías:</span>
+            <button class="badge bg-secondary text-decoration-none btn-filtro-categoria" data-categoria="">
+                Todos
+            </button>
+            {% for cat in categorias %}
+            <button class="badge bg-secondary text-decoration-none btn-filtro-categoria" data-categoria="{{ cat.id }}">
+                {{ cat.nombre }}
+            </button>
+            {% endfor %}
+        </div>
+        
+        <!-- Botón limpiar filtros -->
+        <div class="mt-2">
+            <button onclick="limpiarFiltros()" class="btn btn-sm btn-outline-secondary">
+                <i class="fa-solid fa-times me-1"></i> Limpiar filtros
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Resultados -->
+<div class="row" id="productos-container">
+    <!-- Spinner de carga -->
+    <div id="loading-spinner" class="col-12 text-center py-5">
+        <div class="spinner-border text-cyber" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-secondary mt-2">Cargando productos...</p>
+    </div>
+</div>
+
+<script>
+    // Event delegation para botones de categorías
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-filtro-categoria');
+        if (!btn) return;
+        
+        var categoria = btn.getAttribute('data-categoria');
+        var selectCategoria = document.querySelector('select[name="categoria"]');
+        if (selectCategoria) selectCategoria.value = categoria;
+        
+        // Actualizar clase active
+        document.querySelectorAll('.btn-filtro-categoria').forEach(function(b) {
+            b.classList.remove('bg-cyber');
+            b.classList.add('bg-secondary');
+        });
+        btn.classList.remove('bg-secondary');
+        btn.classList.add('bg-cyber');
+        
+        buscarProductos();
+    });
+</script>
+
+<!-- Modales de compra para cada producto -->
+{% for p in productos %}
+{% set stock = p.stock_disponible() %}
+{% if stock > 0 %}
+<div class="modal fade" id="modalCompra{{ p.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-secondary text-white">
+            
+            <div class="modal-header border-secondary d-flex justify-content-between align-items-start">
+                <h5 class="modal-title fw-bold text-uppercase">{{ p.nombre_producto }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form action="{{ url_for('public.procesar_compra', id=p.id) }}" method="POST" class="m-0">
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <img src="{{ url_for('static', filename=p.imagen_url) if p.imagen_url else '#' }}" class="rounded border border-secondary me-3 object-fit-cover" style="width: 80px; height: 80px; aspect-ratio: 1/1;">
+                        <div>
+                            <h2 class="text-warning fw-bold mb-0">S/ {{ "%.2f"|format(p.precio) }}</h2>
+                            <p class="text-secondary small m-0">{{ p.descripcion[:60] | striptags if p.descripcion else '' }}...</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="fw-bold mb-2 small">Tiempo de compra</p>
+                        <div class="d-flex gap-2">
+                            <div class="border border-warning rounded p-2 text-center bg-warning bg-opacity-10" style="min-width: 100px;">
+                                <div class="text-warning fw-bold">30 días</div>
+                                <div class="small bg-warning text-dark rounded mt-1 fw-bold">S/ {{ "%.2f"|format(p.precio) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if p.tipo_entrega == 'cliente_propio' %}
+                    <div class="alert alert-info mb-3">
+                        <i class="fa-solid fa-info-circle me-2"></i>
+                        <strong>Activación a Dominio</strong><br>
+                        <small>Por favor ingresa el correo donde deseas recibir la cuenta.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white">Correo electrónico para activación *</label>
+                        <input type="email" name="correo_cliente" class="form-control bg-dark border-secondary text-white" placeholder="tucorreo@ejemplo.com" required>
+                        <small class="text-secondary">El proveedor creará la cuenta en este correo.</small>
+                    </div>
+                    {% else %}
+                    <input type="hidden" name="correo_cliente" value="">
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer border-secondary justify-content-end">
+                    <button type="button" class="btn btn-light text-dark fw-bold px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4"><i class="fa-solid fa-check"></i> Pagar ahora</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
+

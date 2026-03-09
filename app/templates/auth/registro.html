@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Cuenta - CyberStore{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .form-control:focus {
+        background-color: #212529;
+        color: white;
+        border-color: #00d26a;
+        box-shadow: 0 0 0 0.25rem rgba(0, 210, 106, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5 mb-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-dark shadow-lg border-0">
+            <div class="card-header text-center pt-4 pb-0 border-0 bg-transparent">
+                <i class="fa-solid fa-user-plus fa-3x text-cyber mb-3"></i>
+                <h3 class="fw-bold text-white">Únete a CyberStore</h3>
+                <p class="text-secondary">Crea tu cuenta para comprar al mejor precio</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form action="{{ url_for('auth.registro') }}" method="POST">
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="nombre_completo" class="form-label text-secondary"><i class="fa-solid fa-id-card"></i> Nombre Completo</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="nombre_completo" name="nombre_completo" value="{{ nombre_completo or '' }}" required autofocus>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre_usuario" class="form-label text-secondary"><i class="fa-solid fa-user"></i> Nombre de Usuario</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary {% if duplicado == 'nombre_usuario' or duplicado == 'ambos' %}border-danger{% endif %}" id="nombre_usuario" name="nombre_usuario" value="{{ nombre_usuario or '' }}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="correo" class="form-label text-secondary"><i class="fa-solid fa-envelope"></i> Correo Electrónico</label>
+                            <input type="email" class="form-control bg-dark text-white border-secondary {% if duplicado == 'correo' or duplicado == 'ambos' %}border-danger{% endif %}" id="correo" name="correo" value="{{ correo or '' }}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label for="telefono_whatsapp" class="form-label text-secondary"><i class="fa-brands fa-whatsapp text-success"></i> WhatsApp</label>
+                            <div class="input-group">
+                                <select class="form-select bg-dark text-white border-secondary" id="pais_telefono" name="pais_telefono" style="max-width: 90px;" required>
+                                    <option value="+51" data-country-code="pe" selected>🇵🇪</option>
+                                    <option value="+54" data-country-code="ar">🇦🇷</option>
+                                    <option value="+591" data-country-code="bo">🇧🇴</option>
+                                    <option value="+55" data-country-code="br">🇧🇷</option>
+                                    <option value="+56" data-country-code="cl">🇨🇱</option>
+                                    <option value="+57" data-country-code="co">🇨🇴</option>
+                                    <option value="+506" data-country-code="cr">🇨🇷</option>
+                                    <option value="+1" data-country-code="do">🇩🇴</option>
+                                    <option value="+593" data-country-code="ec">🇪🇨</option>
+                                    <option value="+503" data-country-code="sv">🇸🇻</option>
+                                    <option value="+502" data-country-code="gt">🇬🇹</option>
+                                    <option value="+504" data-country-code="hn">🇭🇳</option>
+                                    <option value="+52" data-country-code="mx">🇲🇽</option>
+                                    <option value="+505" data-country-code="ni">🇳🇮</option>
+                                    <option value="+507" data-country-code="pa">🇵🇦</option>
+                                    <option value="+595" data-country-code="py">🇵🇾</option>
+                                    <option value="+598" data-country-code="uy">🇺🇾</option>
+                                    <option value="+58" data-country-code="ve">🇻🇪</option>
+                                    <option value="+34" data-country-code="es">🇪🇸</option>
+                                    <option value="+39" data-country-code="it">🇮🇹</option>
+                                    <option value="+351" data-country-code="pt">🇵🇹</option>
+                                    <option value="+1" data-country-code="us">🇺🇸</option>
+                                    <option value="+1" data-country-code="ca">🇨🇦</option>
+                                    <option value="+44" data-country-code="gb">🇬🇧</option>
+                                    <option value="+49" data-country-code="de">🇩🇪</option>
+                                </select>
+                                <input type="tel" class="form-control bg-dark text-white border-secondary" id="telefono_whatsapp" name="telefono_whatsapp" value="{{ telefono or '' }}" placeholder="+51 987 654 321" inputmode="tel" pattern="[0-9]+" required>
+                            </div>
+                            <input type="hidden" id="codigo_pais" name="codigo_pais" value="+51">
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label for="password" class="form-label text-secondary"><i class="fa-solid fa-lock"></i> Contraseña</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control bg-dark text-white border-secondary" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary border-secondary text-secondary" type="button" onclick="togglePassword('password', this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary-custom btn-lg">
+                            <i class="fa-solid fa-rocket"></i> Crear mi Cuenta
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card-footer text-center pb-4 border-0 bg-transparent">
+                <span class="text-secondary">¿Ya tienes una cuenta? </span>
+                <a href="{{ url_for('auth.login') }}" class="text-cyber text-decoration-none fw-bold">Inicia Sesión aquí</a>
+            </div>
+    </div>
+
+<script>
+    // Función para mostrar/ocultar contraseña
+    function togglePassword(inputId, boton) {
+        let input = document.getElementById(inputId);
+        let icono = boton.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icono.classList.remove('fa-eye');
+            icono.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icono.classList.remove('fa-eye-slash');
+            icono.classList.add('fa-eye');
+        }
+    }
+
+    // Datos de países con ejemplos de números y dígitos válidos (sin contar el código de país)
+    const paises = {
+        "+51": { ejemplo: "Ej: +51 987 654 321", digitos: 9, inicio: "9" },       // Perú: 9 dígitos
+        "+54": { ejemplo: "Ej: +54 11 2345 6789", digitos: 11, inicio: "" },      // Argentina: 10 dígitos
+        "+591": { ejemplo: "Ej: +591 71234567", digitos: 8, inicio: "" },          // Bolivia: 8 dígitos
+        "+55": { ejemplo: "Ej: +55 98765 4321", digitos: 10, inicio: "" },        // Brasil: 10 dígitos
+        "+56": { ejemplo: "Ej: +56 9 1234 5678", digitos: 9, inicio: "9" },       // Chile: 9 dígitos
+        "+57": { ejemplo: "Ej: +57 312 345 6789", digitos: 10, inicio: "" },       // Colombia: 10 dígitos
+        "+506": { ejemplo: "Ej: +506 8812 3456", digitos: 8, inicio: "" },         // Costa Rica: 8 dígitos
+        "+1": { ejemplo: "Ej: +1 234 567 8901", digitos: 10, inicio: "" },        // EE.UU./Canadá: 10 dígitos
+        "+593": { ejemplo: "Ej: +593 99 123 4567", digitos: 9, inicio: "" },       // Ecuador: 9 dígitos
+        "+503": { ejemplo: "Ej: +503 7012 3456", digitos: 8, inicio: "" },         // El Salvador: 8 dígitos
+        "+502": { ejemplo: "Ej: +502 5123 4567", digitos: 8, inicio: "" },         // Guatemala: 8 dígitos
+        "+504": { ejemplo: "Ej: +504 9123 4567", digitos: 8, inicio: "" },         // Honduras: 8 dígitos
+        "+52": { ejemplo: "Ej: +52 222 123 4567", digitos: 10, inicio: "" },       // México: 10 dígitos
+        "+505": { ejemplo: "Ej: +505 8851 2345", digitos: 8, inicio: "" },         // Nicaragua: 8 dígitos
+        "+507": { ejemplo: "Ej: +507 6123 4567", digitos: 8, inicio: "" },         // Panamá: 8 dígitos
+        "+595": { ejemplo: "Ej: +595 981 234567", digitos: 9, inicio: "" },        // Paraguay: 9 dígitos
+        "+598": { ejemplo: "Ej: +598 9123 4567", digitos: 8, inicio: "" },         // Uruguay: 8 dígitos
+        "+58": { ejemplo: "Ej: +58 412 123 4567", digitos: 10, inicio: "" },       // Venezuela: 10 dígitos
+        "+34": { ejemplo: "Ej: +34 612 345 678", digitos: 9, inicio: "" },         // España: 9 dígitos
+        "+39": { ejemplo: "Ej: +39 312 345 6789", digitos: 10, inicio: "" },       // Italia: 10 dígitos
+        "+351": { ejemplo: "Ej: +351 912 345 678", digitos: 9, inicio: "" },        // Portugal: 9 dígitos
+        "+44": { ejemplo: "Ej: +44 7912 345678", digitos: 10, inicio: "" },        // Reino Unido: 10 dígitos
+        "+49": { ejemplo: "Ej: +49 1512 345678", digitos: 11, inicio: "" }         // Alemania: 11 dígitos
+    };
+
+    // Función para limitar la cantidad de dígitos
+    function limitarDigitos(input, digitosMaximos) {
+        if (input.value.length > digitosMaximos) {
+            input.value = input.value.slice(0, digitosMaximos);
+        }
+    }
+
+    // Actualizar placeholder al cambiar de país
+    document.getElementById('pais_telefono').addEventListener('change', function() {
+        const codigo = this.value;
+        const input = document.getElementById('telefono_whatsapp');
+        
+        // Actualizar el campo oculto con el código de país
+        document.getElementById('codigo_pais').value = codigo;
+        
+        // Actualizar el placeholder con el ejemplo del país
+        if (paises[codigo]) {
+            input.placeholder = paises[codigo].ejemplo;
+        }
+        
+        // Limpiar el campo
+        input.value = "";
+        input.focus();
+    });
+
+    // Validar el número de teléfono
+    document.getElementById('telefono_whatsapp').addEventListener('input', function(e) {
+        // Solo permitir números
+        this.value = this.value.replace(/[^0-9]/g, '');
+        
+        const codigo = document.getElementById('pais_telefono').value;
+        const datos = paises[codigo];
+        
+        if (datos) {
+            // LIMITA la cantidad de dígitos que puede escribir
+            limitarDigitos(this, datos.digitos);
+            
+            // Validar dígito inicial si es requerido
+            if (datos.inicio && this.value.length > 0 && this.value[0] !== datos.inicio) {
+                this.setCustomValidity('El número debe empezar con ' + datos.inicio);
+            } else {
+                this.setCustomValidity('');
+            }
+            
+            // Validar cantidad de dígitos
+            if (this.value.length > 0 && this.value.length !== datos.digitos) {
+                this.setCustomValidity('El número debe tener ' + datos.digitos + ' dígitos');
+            } else {
+                this.setCustomValidity('');
+            }
+        }
+    });
+        // Concatenar código de país al número al enviar el formulario
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const codigoPais = document.getElementById('pais_telefono').value;
+        const telefono = document.getElementById('telefono_whatsapp');
+        
+        // Agregar el código de país al número antes de enviar
+        telefono.value = codigoPais + telefono.value;
+    });
+
+</script>
+
+{% endblock %}

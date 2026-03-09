@@ -1,0 +1,211 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Ventas de Proveedores - Panel Admin{% endblock %}
+{% block page_title %}Ventas Diarias de Proveedores{% endblock %}
+
+{% block content %}
+<!-- Filtros -->
+<div class="card card-dark border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin.ventas_proveedores') }}" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Fecha Inicio</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha Fin</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Proveedor</label>
+                <select name="proveedor_id" class="form-select">
+                    <option value="todos">Todos los proveedores</option>
+                    {% for proveedor in proveedores %}
+                    <option value="{{ proveedor.id }}" {% if proveedor_id == proveedor.id|string %}selected{% endif %}>
+                        {{ proveedor.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-cyber me-2">
+                    <i class="fa-solid fa-filter"></i> Filtrar
+                </button>
+                <a href="{{ url_for('admin.ventas_proveedores') }}" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-cyber"><i class="fa-solid fa-calendar-day"></i></h1>
+            <h4 class="text-white">{{ ventas_hoy_count }}</h4>
+            <p class="text-secondary m-0">Ventas Hoy</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-success"><i class="fa-solid fa-soles"></i></h1>
+            <h4 class="text-white">S/ {{ "%.2f"|format(ingresos_hoy) }}</h4>
+            <p class="text-secondary m-0">Ingresos Hoy</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-info"><i class="fa-solid fa-list"></i></h1>
+            <h4 class="text-white">{{ total_transacciones }}</h4>
+            <p class="text-secondary m-0">Transacciones ({{ fecha_inicio.strftime('%d/%m') }} - {{ fecha_fin.strftime('%d/%m') }})</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h1 class="text-warning"><i class="fa-solid fa-chart-line"></i></h1>
+            <h4 class="text-white">S/ {{ "%.2f"|format(ingresos_totales) }}</h4>
+            <p class="text-secondary m-0">Ingresos del Período</p>
+        </div>
+    </div>
+</div>
+
+<!-- Proveedor Top y Desglose -->
+<div class="row mb-4">
+    {% if proveedor_top %}
+    <div class="col-md-4 mb-3">
+        <div class="card card-dark border-0 shadow text-center p-3">
+            <h5 class="text-secondary mb-3"><i class="fa-solid fa-trophy text-warning"></i> Proveedor Top</h5>
+            <h4 class="text-cyber">{{ proveedor_top[0] }}</h4>
+            <p class="text-white mb-1">{{ proveedor_top[1].count }} transacciones</p>
+            <p class="text-success fw-bold">S/ {{ "%.2f"|format(proveedor_top[1].ingresos) }}</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="col-md-{% if proveedor_top %}8{% else %}12{% endif %} mb-3">
+        <div class="card card-dark border-0 shadow p-3">
+            <h5 class="text-secondary mb-3"><i class="fa-solid fa-chart-pie"></i> Desglose por Proveedor</h5>
+            {% if ventas_por_proveedor %}
+            <div class="table-responsive">
+                <table class="table table-dark table-sm">
+                    <thead>
+                        <tr>
+                            <th>Proveedor</th>
+                            <th class="text-center">Transacciones</th>
+                            <th class="text-end">Ingresos</th>
+                            <th class="text-end">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prov, datos in ventas_por_proveedor.items() %}
+                        <tr>
+                            <td>{{ prov }}</td>
+                            <td class="text-center">{{ datos.count }}</td>
+                            <td class="text-end text-success">S/ {{ "%.2f"|format(datos.ingresos) }}</td>
+                            <td class="text-end">{{ "%.1f"|format((datos.ingresos / ingresos_totales * 100) if ingresos_totales > 0 else 0) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center">No hay ventas en el período seleccionado.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Transacciones -->
+<div class="card card-dark border-0 shadow">
+    <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="text-white"><i class="fa-solid fa-list-alt"></i> Detalle de Transacciones</h5>
+    </div>
+    <div class="card-body">
+        {% if ventas %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover" id="tabla-ventas">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Proveedor</th>
+                        <th>Cliente</th>
+                        <th>Precio</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in ventas %}
+                    <tr>
+                        <td>{{ v.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if v.tipo == 'Venta Directa' %}
+                            <span class="badge bg-primary">{{ v.tipo }}</span>
+                            {% else %}
+                            <span class="badge bg-info">{{ v.tipo }}</span>
+                            {% endif %}
+                        </td>
+                        <td><code>{{ v.codigo }}</code></td>
+                        <td>{{ v.producto }}</td>
+                        <td>{{ v.proveedor }}</td>
+                        <td>{{ v.cliente }}</td>
+                        <td class="text-success fw-bold">S/ {{ "%.2f"|format(v.precio) }}</td>
+                        <td>
+                            {% if v.estado == 'Activo' %}
+                            <span class="badge bg-success">{{ v.estado }}</span>
+                            {% elif v.estado == 'Por Vencer' %}
+                            <span class="badge bg-warning text-dark">{{ v.estado }}</span>
+                            {% elif v.estado == 'Vencido' %}
+                            <span class="badge bg-danger">{{ v.estado }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ v.estado }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fa-solid fa-inbox fa-3x text-secondary mb-3"></i>
+            <p class="text-secondary">No hay transacciones en el período seleccionado.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- quick filter buttons -->
+<div class="mt-3 d-flex gap-2">
+    <a href="{{ url_for('admin.ventas_proveedores', fecha_inicio=hoy, fecha_fin=hoy, proveedor_id=proveedor_id or 'todos') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-calendar-day"></i> Hoy
+    </a>
+    <a href="{{ url_for('admin.ventas_proveedores', fecha_inicio=(date.today() - timedelta(days=7)).strftime('%Y-%m-%d'), fecha_fin=hoy, proveedor_id=proveedor_id or 'todos') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-calendar-week"></i> Últimos 7 días
+    </a>
+    <a href="{{ url_for('admin.ventas_proveedores', fecha_inicio=(date.today() - timedelta(days=30)).strftime('%Y-%m-%d'), fecha_fin=hoy, proveedor_id=proveedor_id or 'todos') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-calendar"></i> Últimos 30 días
+    </a>
+</div>
+
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .table-dark {
+        --bs-table-bg: #1a1a24;
+    }
+    .card-dark {
+        background-color: #1a1a24;
+    }
+    .badge.bg-info {
+        background-color: #0dcaf0 !important;
+        color: #000 !important;
+    }
+</style>
+{% endblock %}
+

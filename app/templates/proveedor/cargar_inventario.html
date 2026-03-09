@@ -1,0 +1,150 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Cargar Inventario - CyberStore{% endblock %}
+{% block page_title %}Cargar Nuevo Stock{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-dark border-0 shadow-lg">
+            <div class="card-header border-secondary py-3 bg-transparent text-center">
+                <h5 class="mb-0 text-white"><i class="fa-solid fa-key text-cyber"></i> Registrar Credenciales de Producto</h5>
+                <p class="text-secondary small m-0">Selecciona un producto y completa los datos de acceso.</p>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('proveedor.guardar_stock') }}" method="POST">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary small">¿A qué producto pertenece?</label>
+                            <select class="form-select bg-dark text-white border-secondary" name="producto_id" id="producto_select" required onchange="actualizarInfoProducto()">
+                                <option value="" disabled selected>-- Seleccionar Producto --</option>
+                                {% for p in productos %}
+                                    <option value="{{ p.id }}" 
+                                            data-tipo-producto="{{ p.tipo_producto }}" 
+                                            data-tipo-entrega="{{ p.tipo_entrega }}"
+                                            data-nombre="{{ p.nombre_producto }}">
+                                        {{ p.nombre_producto }} (S/ {{ p.precio }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary small">Tipo de Entrega</label>
+                            <div id="tipo_entrega_display" class="form-control bg-dark text-white border-secondary" style="min-height: 38px; display: flex; align-items: center;">
+                                <span class="text-muted">Selecciona un producto para ver</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary small">Tipo de Producto</label>
+                            <div id="tipo_producto_display" class="form-control bg-dark text-white border-secondary" style="min-height: 38px; display: flex; align-items: center;">
+                                <span class="text-muted">Selecciona un producto para ver</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary small">Tipo de Cuenta (para inventario)</label>
+                            <select class="form-select bg-dark text-white border-secondary" name="tipo_cuenta" id="tipo_cuenta" required>
+                                <option value="Perfil Compartido">Perfil Compartido (Streaming)</option>
+                                <option value="Cuenta Completa">Cuenta Completa (Email/Pass)</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3" id="otro_tipo_container" style="display: none;">
+                            <label class="form-label text-secondary small">Especificar Tipo</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="tipo_cuenta_otro" placeholder="Ej: Licencia, Invitación, etc.">
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary my-3">
+
+                    <div id="campos_credenciales">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-secondary small">Correo / Usuario de Acceso</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" name="correo" placeholder="ejemplo@correo.com">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-secondary small">Contraseña (Opcional)</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" name="password" placeholder="********">
+                                <small class="text-muted">Dejar en blanco si el producto es "Por Código"</small>
+                            </div>
+                        </div>
+
+                        <div class="row" id="fila_perfil">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-secondary small">Nombre de Perfil (Si aplica)</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" name="perfil" placeholder="Ej: Perfil 1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-secondary small">PIN de Seguridad (Si aplica)</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" name="pin" placeholder="1234">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('proveedor.mi_stock') }}" class="btn btn-outline-secondary px-4">
+                            <i class="fa-solid fa-arrow-left"></i> Volver a Mi Stock
+                        </a>
+                        <div>
+                            <button type="reset" class="btn btn-secondary px-4 me-2">Limpiar</button>
+                            <button type="submit" class="btn btn-primary-custom px-5">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Cargar al Stock
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function actualizarInfoProducto() {
+    const select = document.getElementById('producto_select');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    const tipoEntregaDisplay = document.getElementById('tipo_entrega_display');
+    const tipoProductoDisplay = document.getElementById('tipo_producto_display');
+    
+    const tipoEntrega = selectedOption.getAttribute('data-tipo-entrega');
+    const tipoProducto = selectedOption.getAttribute('data-tipo-producto');
+    
+    // Alias para tipo de entrega (igual que en index.html)
+    let aliasEntrega = '';
+    if (tipoEntrega === 'credenciales') {
+        aliasEntrega = '<span class="badge bg-info">Entrega Automática</span>';
+    } else if (tipoEntrega === 'codigo') {
+        aliasEntrega = '<span class="badge bg-info">Activación por Código</span>';
+    } else if (tipoEntrega === 'cliente_propio') {
+        aliasEntrega = '<span class="badge bg-info">Activación a Dominio</span>';
+    } else {
+        aliasEntrega = '<span class="badge bg-info">' + tipoEntrega + '</span>';
+    }
+    
+    // Alias para tipo de producto (igual que en index.html)
+    let aliasProducto = '';
+    if (tipoProducto === 'Cuenta Completa') {
+        aliasProducto = '<span class="badge bg-warning">Cuenta Completa</span>';
+    } else if (tipoProducto === 'Cuenta Compartida') {
+        aliasProducto = '<span class="badge bg-warning">Cuenta Compartida</span>';
+    } else if (tipoProducto === 'Licencia') {
+        aliasProducto = '<span class="badge bg-warning">Licencia</span>';
+    } else if (tipoProducto === 'Perfil Individual' || tipoProducto === 'Perfil') {
+        aliasProducto = '<span class="badge bg-warning">Perfil Individual</span>';
+    } else {
+        aliasProducto = '<span class="badge bg-warning">' + tipoProducto + '</span>';
+    }
+    
+    tipoEntregaDisplay.innerHTML = aliasEntrega;
+    tipoProductoDisplay.innerHTML = aliasProducto;
+}
+</script>
+
+{% endblock %}

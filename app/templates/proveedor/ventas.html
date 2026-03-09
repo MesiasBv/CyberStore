@@ -1,0 +1,413 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Mis Ventas - Proveedor{% endblock %}
+{% block page_title %}Historial de Ventas y Servicios{% endblock %}
+
+{% block content %}
+<!-- Estadisticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-dark border-0 shadow">
+            <div class="card-body text-center">
+                <h3 class="text-info fw-bold">{{ ventas|length + servicios|length }}</h3>
+                <p class="text-secondary m-0">Total Transacciones</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dark border-0 shadow">
+            <div class="card-body text-center">
+                <h3 class="text-success fw-bold">{{ servicios|selectattr('estado_servicio', 'equalto', 'Activo')|list|length + ventas|selectattr('estado_servicio', 'equalto', 'Activo')|list|length }}</h3>
+                <p class="text-secondary m-0">Servicios Activos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dark border-0 shadow">
+            <div class="card-body text-center">
+                <h3 class="text-warning fw-bold">{{ ventas|selectattr('estado_entrega', 'equalto', 'Pendiente')|list|length }}</h3>
+                <p class="text-secondary m-0">Entregas Pendientes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dark border-0 shadow">
+            <div class="card-body text-center">
+                <h3 class="text-danger fw-bold">{{ servicios|selectattr('estado_servicio', 'equalto', 'Vencido')|list|length + ventas|selectattr('estado_servicio', 'equalto', 'Vencido')|list|length }}</h3>
+                <p class="text-secondary m-0">Vencidos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Buscador -->
+<div class="card card-dark border-0 shadow mb-4">
+    <div class="p-3 border-bottom border-secondary">
+        <div class="input-group">
+            <span class="input-group-text bg-transparent text-secondary border-secondary">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="buscador" class="form-control bg-transparent text-white border-secondary" placeholder="Buscar por cliente, producto, correo...">
+        </div>
+    </div>
+</div>
+
+<!-- Tabla Unificada de Ventas y Servicios -->
+<div class="card card-dark border-0 shadow">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0">
+            <thead class="bg-secondary">
+                <tr>
+                    <th>ID</th>
+                    <th>Codigo</th>
+                    <th>Cliente</th>
+                    <th>Producto</th>
+                    <th>Tipo Entrega</th>
+                    <th>Correo Cliente</th>
+                    <th>Estado Entrega</th>
+                    <th>Fechas</th>
+                    <th>Estado</th>
+                    <th>Monto</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaVentas">
+                {% if ventas or servicios %}
+                <!-- Ventas Directas (cuentas simples) -->
+                {% for v in ventas %}
+                <tr class="fila-venta">
+                    <td class="fw-bold">#{{ v.id }}</td>
+                    <td class="text-secondary">{{ v.codigo_unico }}</td>
+                    <td class="fw-bold">{{ v.cliente.nombre_completo }}</td>
+                    <td>
+                        {{ v.producto.nombre_producto }}
+                        <br><small class="text-info">{{ v.producto.tipo_producto }}</small>
+                    </td>
+                    <td>
+                        {% if v.producto.tipo_entrega == 'cliente_propio' %}
+                        <span class="badge bg-primary">Correo Cliente</span>
+                        {% elif v.producto.tipo_entrega == 'codigo' %}
+                        <span class="badge bg-warning text-dark">Codigo</span>
+                        {% else %}
+                        <span class="badge bg-success">Automatica</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if v.correo_cliente %}
+                        <span class="text-info">{{ v.correo_cliente }}</span>
+                        {% elif v.inventario_entregado %}
+                        <span class="text-secondary">{{ v.inventario_entregado.correo_acceso if v.inventario_entregado else '-' }}</span>
+                        {% else %}
+                        <span class="text-secondary">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if v.estado_entrega == 'Pendiente' %}
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% else %}
+                        <span class="badge bg-success">Entregado</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-secondary small">
+                        <div>Inicio: {{ v.fecha_inicio_servicio.strftime('%d/%m/%y') if v.fecha_inicio_servicio else '-' }}</div>
+                        <div>Fin: {{ v.fecha_fin_servicio.strftime('%d/%m/%y') if v.fecha_fin_servicio else '-' }}</div>
+                    </td>
+                    <td>
+                        {% if v.estado_servicio == 'Activo' %}
+                        <span class="badge bg-success">Activo</span>
+                        {% elif v.estado_servicio == 'Por Vencer' %}
+                        <span class="badge bg-warning text-dark">Por Vencer</span>
+                        {% elif v.estado_servicio == 'Vencido' %}
+                        <span class="badge bg-danger">Vencido</span>
+                        {% else %}
+                        <span class="badge bg-secondary">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-cyber fw-bold">S/ {{ "%.2f"|format(v.precio_final) }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalEditarVenta{{ v.id }}">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        {% if v.estado_entrega == 'Pendiente' %}
+                        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalMarcarEntregado{{ v.id }}" title="Marcar como entregado">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                
+                <!-- Modal para editar venta -->
+                <div class="modal fade" id="modalEditarVenta{{ v.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title text-white"><i class="fa-solid fa-pen-to-square text-cyber"></i> Editar Venta #{{ v.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ url_for('proveedor.editar_venta', id=v.id) }}" method="POST">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label text-secondary">Cliente</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ v.cliente.nombre_completo }}" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label text-secondary">Producto</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ v.producto.nombre_producto }}" readonly>
+                                        </div>
+                                    </div>
+                                    {% if v.producto.tipo_entrega == 'cliente_propio' %}
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label text-secondary">Correo del Cliente</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ v.correo_cliente or 'No proporcionado' }}" readonly>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% if v.inventario_entregado %}
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label text-secondary">Correo Entregado</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ v.inventario_entregado.correo_acceso if v.inventario_entregado else 'N/A' }}" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label text-secondary">Contrasena (Opcional)</label>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="password" value="{{ v.inventario_entregado.password_acceso if v.inventario_entregado else '' }}" placeholder="Nueva contrasena">
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label text-secondary">Precio (S/)</label>
+                                            <input type="number" step="0.01" class="form-control bg-dark text-white border-secondary" name="precio_final" value="{{ v.precio_final }}">
+                                        </div>
+                                    </div>
+                                    <hr class="border-secondary">
+                                    <h6 class="text-info mb-3"><i class="fa-solid fa-calendar-check"></i> Fechas del Servicio del Cliente</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label text-secondary">Fecha Inicio Suscripcion</label>
+                                            <input type="date" class="form-control bg-dark text-white border-secondary" name="fecha_inicio_servicio" value="{{ v.fecha_inicio_servicio.strftime('%Y-%m-%d') if v.fecha_inicio_servicio else '' }}">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label text-secondary">Fecha Fin Suscripcion</label>
+                                            <input type="date" class="form-control bg-dark text-white border-secondary" name="fecha_fin_servicio" value="{{ v.fecha_fin_servicio.strftime('%Y-%m-%d') if v.fecha_fin_servicio else '' }}">
+                                        </div>
+                                    </div>
+                                    <hr class="border-secondary">
+                                    <h6 class="text-warning mb-3"><i class="fa-solid fa-credit-card"></i> Fecha de Expiracion de la Cuenta (Pago a Plataforma)</h6>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label text-secondary">Cuando expira la cuenta que pagaste a la plataforma?</label>
+                                            <input type="date" class="form-control bg-dark text-white border-secondary" name="fecha_expiracion_cuenta_proveedor" value="{{ v.fecha_expiracion_cuenta_proveedor.strftime('%Y-%m-%d') if v.fecha_expiracion_cuenta_proveedor else '' }}">
+                                            <small class="text-secondary">Configura esta fecha para recordar cuando debes renovar tu suscripcion</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-cyber"><i class="fa-solid fa-save"></i> Guardar Cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal para marcar como entregado -->
+                <div class="modal fade" id="modalMarcarEntregado{{ v.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title text-white"><i class="fa-solid fa-check-circle text-success"></i> Marcar como Entregado</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form onsubmit="return marcarEntregado(event, {{ v.id }})">
+                                <div class="modal-body">
+                                    <div class="alert alert-info">
+                                        <i class="fa-solid fa-info-circle"></i>
+                                        Estas por marcar la venta <strong>#{{ v.codigo_unico }}</strong> como entregada.
+                                        {% if v.producto.tipo_entrega == 'cliente_propio' %}
+                                        <br>El cliente proporciono el correo: <strong>{{ v.correo_cliente }}</strong>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-secondary">Notas (opcional)</label>
+                                        <textarea class="form-control bg-dark text-white border-secondary" 
+                                                  id="notasEntrega{{ v.id }}" rows="2" 
+                                                  placeholder="Alguna nota para el cliente..."></textarea>
+                                    </div>
+                                    {% if v.producto.tipo_entrega in ['credenciales', 'codigo'] %}
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="mostrarCred{{ v.id }}">
+                                            <label class="form-check-label text-secondary" for="mostrarCred{{ v.id }}">
+                                                Mostrar credenciales al cliente en la plataforma
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Confirmar Entrega</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal para enviar codigo de verificacion - DENTRO del for -->
+                {% if v.producto.tipo_entrega == 'codigo' %}
+                <div class="modal fade" id="modalEnviarCodigo{{ v.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title text-white"><i class="fa-solid fa-key text-success"></i> Enviar Codigo de Verificacion</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form onsubmit="enviarCodigo(event, {{ v.id }})">
+                                <div class="modal-body">
+                                    <div class="alert alert-info">
+                                        <i class="fa-solid fa-info-circle"></i> 
+                                        El cliente ha comprado un producto que requiere <strong>activacion por codigo</strong>. 
+                                        Ingresa el codigo que el cliente debera usar en la plataforma externa.
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-secondary">Codigo de Verificacion</label>
+                                        <input type="text" class="form-control bg-dark text-white border-secondary" 
+                                               id="codigoInput{{ v.id }}" placeholder="Ej: ABC123XYZ" required>
+                                        <small class="text-muted">Este codigo sera visible para el cliente</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-secondary">Cliente</label>
+                                        <input type="text" class="form-control bg-dark text-white border-secondary" 
+                                               value="{{ v.cliente.nombre_completo }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-paper-plane"></i> Enviar Codigo</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% endfor %}
+                
+                <!-- Servicios (cuentas con renovacion) -->
+                {% for s in servicios %}
+                <tr class="fila-servicio">
+                    <td class="fw-bold">#{{ s.id }}</td>
+                    <td class="text-secondary">-</td>
+                    <td class="fw-bold">{{ s.cliente.nombre_completo }}</td>
+                    <td>{{ s.producto.nombre_producto }}</td>
+                    <td><span class="badge bg-info">Servicio</span></td>
+                    <td class="text-info">{{ s.inventario.correo_acceso }}</td>
+                    <td><span class="badge bg-success">Entregado</span></td>
+                    <td class="text-secondary small">
+                        <div>Inicio: {{ s.fecha_inicio.strftime('%d/%m/%y') if s.fecha_inicio else 'Sin fecha' }}</div>
+                        <div>Fin: {{ s.fecha_fin.strftime('%d/%m/%y') if s.fecha_fin else 'Sin fecha' }}</div>
+                    </td>
+                    <td>
+                        {% if s.estado_servicio == 'Activo' %}
+                        <span class="badge bg-success">Activo</span>
+                        {% elif s.estado_servicio == 'Por Vencer' %}
+                        <span class="badge bg-warning text-dark">Por Vencer</span>
+                        {% elif s.estado_servicio == 'Vencido' %}
+                        <span class="badge bg-danger">Vencido</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ s.estado_servicio }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-cyber fw-bold">S/ {{ "%.2f"|format(s.precio_pagado) }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="11" class="text-center py-4 text-secondary">
+                        <i class="fa-solid fa-receipt fa-2x mb-2" style="opacity: 0.5;"></i><br>
+                        No hay ventas ni servicios registrados todavia.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('buscador').addEventListener('keyup', function() {
+    var filtro = this.value.toLowerCase();
+    var filas = document.querySelectorAll('#tablaVentas tr');
+    filas.forEach(function(fila) {
+        var textoFila = fila.innerText.toLowerCase();
+        fila.style.display = textoFila.includes(filtro) ? '' : 'none';
+    });
+});
+
+function enviarCodigo(event, ventaId) {
+    event.preventDefault();
+    var codigo = document.getElementById('codigoInput' + ventaId).value;
+    
+    fetch('/proveedor/enviar-codigo-verificacion/' + ventaId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'codigo=' + encodeURIComponent(codigo)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar el modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('modalEnviarCodigo' + ventaId));
+            modal.hide();
+            // Recargar la pagina para ver los cambios
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al enviar el codigo');
+    });
+}
+
+function marcarEntregado(event, ventaId) {
+    event.preventDefault();
+    var notas = document.getElementById('notasEntrega' + ventaId).value;
+    var mostrarCred = document.getElementById('mostrarCred' + ventaId) ? document.getElementById('mostrarCred' + ventaId).checked : false;
+    
+    var formData = new FormData();
+    formData.append('notas', notas);
+    formData.append('mostrar_credenciales', mostrarCred);
+    
+    fetch('/proveedor/marcar-entregado/' + ventaId, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar el modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('modalMarcarEntregado' + ventaId));
+            modal.hide();
+            // Recargar la pagina
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al marcar como entregado');
+    });
+    
+    return false;
+}
+</script>
+{% endblock %}
+
