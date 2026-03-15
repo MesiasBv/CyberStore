@@ -16,7 +16,7 @@ def create_app():
     
     with app.app_context():
         # 1. Importar los modelos (para que SQLAlchemy los reconozca al iniciar)
-        from .models import usuarios, productos, ventas
+        from .models import usuarios, productos, ventas, sugerencias
         
         # 2. Importar los Blueprints de las rutas
         from .routes.public import public_bp

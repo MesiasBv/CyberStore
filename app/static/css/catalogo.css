@@ -58,7 +58,4 @@
   }
 }
 
-/* Pause on hover */
-.logos-marquee:hover .track {
-  animation-play-state: paused;
-}
+

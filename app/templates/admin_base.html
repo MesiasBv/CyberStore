@@ -209,14 +209,20 @@
                         <a href="{{ url_for('admin.gestion_administradores') }}" class="sidebar-link {% if request.endpoint == 'admin.gestion_administradores' %}active{% endif %}"><i class="fa-solid fa-user-shield"></i> Administradores</a>
                     </div>
                     
-                    <a href="#" class="sidebar-link"><i class="fa-solid fa-box-open"></i> Gestion de Catalogo</a>
-                    <a href="#" class="sidebar-link"><i class="fa-solid fa-key"></i> Gestion de Cuentas</a>
+                    <a href="#" class="sidebar-link"><i class="fa-solid fa-box-open"></i> Gestión de Catálogo</a>
+
+                    <a href="#" class="sidebar-link"><i class="fa-solid fa-key"></i> Gestión de Cuentas</a>
+
                     <a href="#" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i> Reportes y Finanzas</a>
+
                     <a href="{{ url_for('admin.ventas_proveedores') }}" class="sidebar-link {% if request.endpoint == 'admin.ventas_proveedores' %}active{% endif %}"><i class="fa-solid fa-calendar-check"></i> Ventas de Proveedores</a>
                     
                     <hr class="border-secondary mx-3 my-2">
-                    <a href="#" class="sidebar-link text-warning"><i class="fa-solid fa-database"></i> Respaldos (Backups)</a>
-                    <a href="{{ url_for('admin.mi_perfil') }}" class="sidebar-link {% if request.endpoint == 'admin.mi_perfil' %}active{% endif %}"><i class="fa-solid fa-gear"></i> Configuracion</a>
+<a href="{{ url_for('admin.sugerencias') }}" class="sidebar-link {% if request.endpoint == 'admin.sugerencias' %}active{% endif %} text-warning"><i class="fa-solid fa-lightbulb"></i> Sugerencias ({{ sugerencias_count or 0 }})</a>
+<a href="{{ url_for('admin.respaldos') }}" class="sidebar-link text-warning {% if request.endpoint == 'admin.respaldos' %}active{% endif %}"><i class="fa-solid fa-database"></i> Respaldos DB</a>
+
+                    <a href="{{ url_for('admin.mi_perfil') }}" class="sidebar-link {% if request.endpoint == 'admin.mi_perfil' %}active{% endif %}"><i class="fa-solid fa-gear"></i> Mi Perfil</a>
+
 
                 {% elif session.get('rol') == 'Proveedor' %}
                     <a href="{{ url_for('proveedor.dashboard') }}" class="sidebar-link {% if request.endpoint == 'proveedor.dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Mi Resumen</a>

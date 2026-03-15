@@ -1,0 +1,78 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Respaldos DB - Admin{% endblock %}
+{% block page_title %}Respaldos de Base de Datos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h5 class="text-white">
+            <i class="fa-solid fa-database text-primary me-2"></i>
+            Gestión de Respaldos ({{ backups|length }})
+        </h5>
+    </div>
+</div>
+
+<!-- Botón Generar Respaldo -->
+<div class="card card-dark shadow mb-4">
+    <div class="card-body text-center">
+        <h6 class="text-white mb-3">Generar nuevo respaldo completo de la DB</h6>
+        <form method="POST" action="{{ url_for('admin.generar_respaldo') }}">
+            <button type="submit" class="btn btn-cyber btn-lg">
+                <i class="fa-solid fa-download me-2"></i>Generar Respaldo Ahora
+            </button>
+        </form>
+        <small class="text-muted mt-2 d-block">Formato: cyberstore_backup_YYYYMMDD_HHMMSS.sql</small>
+    </div>
+</div>
+
+<!-- Lista de Respaldos -->
+<div class="card card-dark shadow">
+    <div class="card-header bg-secondary">
+        <h6 class="mb-0 text-white"><i class="fa-solid fa-list me-2"></i>Respaldos Disponibles</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-dark mb-0">
+            <thead>
+                <tr>
+                    <th>Archivo</th>
+                    <th>Fecha</th>
+                    <th>Tamaño</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for backup in backups %}
+                <tr>
+                    <td><strong>{{ backup }}</strong></td>
+                    <td>{{ backup.split('_')[2][:8] }} {{ backup.split('_')[2][8:12] }}</td>
+                    <td>{{ (backup | length * 1.2)|int }} KB approx</td>
+                    <td>
+                        <a href="{{ url_for('admin.download_respaldo', filename=backup) }}" class="btn btn-sm btn-success me-1" title="Descargar">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarRespaldo('{{ backup }}')" title="Eliminar">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not backups %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">No hay respaldos. Genera el primero.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function eliminarRespaldo(filename) {
+    if (confirm('¿Eliminar respaldo ' + filename + '?')) {
+        window.location.href = '/admin/respaldos/eliminar/' + filename;
+    }
+}
+</script>
+{% endblock %}
+

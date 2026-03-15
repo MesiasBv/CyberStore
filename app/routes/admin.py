@@ -5,7 +5,12 @@ from app import db
 from app.models.usuarios import Proveedor, Cliente, Usuario
 from app.models.ventas import MovimientoSaldo, Venta, ServicioAdquirido
 from app.models.productos import InventarioStock
+from app.models.sugerencias import Sugerencia
+from flask import current_app, send_file
+import subprocess
+import os
 from datetime import datetime, date, timedelta
+
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -356,11 +361,36 @@ def editar_perfil():
 #   GESTIÓN DE VENTAS DIARIAS DE PROVEEDORES
 # ==========================================
 
+@admin_bp.route('/sugerencias')
+@admin_required
+def sugerencias():
+    sugerencias_list = Sugerencia.query.order_by(Sugerencia.id.desc()).all()
+    return render_template('admin/sugerencias.html', sugerencias=sugerencias_list)
+
+@admin_bp.route('/sugerencias/toggle/<int:id>', methods=['POST'])
+@admin_required
+def toggle_sugerencia(id):
+    from app.models.sugerencias import Sugerencia
+    sug = Sugerencia.query.get_or_404(id)
+    sug.estado = not sug.estado
+    db.session.commit()
+    return {'success': True}
+
+@admin_bp.route('/sugerencias/eliminar/<int:id>', methods=['POST'])
+@admin_required
+def eliminar_sugerencia(id):
+    from app.models.sugerencias import Sugerencia
+    sug = Sugerencia.query.get_or_404(id)
+    db.session.delete(sug)
+    db.session.commit()
+    return '', 204
+
 @admin_bp.route('/ventas-proveedores')
 @admin_required
 def ventas_proveedores():
     # Obtener parámetros de filtro
     fecha_inicio = request.args.get('fecha_inicio')
+
     fecha_fin = request.args.get('fecha_fin')
     proveedor_id = request.args.get('proveedor_id')
     
@@ -516,3 +546,64 @@ def ventas_proveedores():
         date=date,
         timedelta=timedelta
     )
+
+
+# ==========================================
+#        MÓDULO DE RESPALDOS DB
+# ==========================================
+
+@admin_bp.route('/respaldos')
+@admin_required
+def respaldos():
+    backups_dir = os.path.join(current_app.root_path, 'app', 'static', 'backups')
+    os.makedirs(backups_dir, exist_ok=True)
+    
+    backups = [f for f in os.listdir(backups_dir) if f.endswith('.sql')]
+    backups.sort(reverse=True)
+    
+    return render_template('admin/respaldos.html', backups=backups)
+
+@admin_bp.route('/respaldos/generar', methods=['POST'])
+@admin_required
+def generar_respaldo():
+    config = current_app.config
+    backups_dir = os.path.join(current_app.root_path, 'app', 'static', 'backups')
+    os.makedirs(backups_dir, exist_ok=True)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'cyberstore_backup_{timestamp}.sql'
+    filepath = os.path.join(backups_dir, filename)
+    
+    cmd = [
+        'mysqldump',
+        f'--user={config["DB_USER"]}',
+        f'--password={config["DB_PASSWORD"]}',
+        f'--host={config["DB_HOST"]}',
+        config["DB_NAME"],
+        '--single-transaction',
+        '--routines',
+        '--triggers',
+        '--no-tablespaces'
+    ]
+    
+    try:
+        with open(filepath, 'w') as f:
+            result = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, text=True, check=True)
+        flash(f'Respaldo creado: {filename}', 'success')
+    except subprocess.CalledProcessError as e:
+        flash(f'Error: {e.stderr}', 'danger')
+    
+    return redirect(url_for('admin.respaldos'))
+
+@admin_bp.route('/respaldos/download/<filename>')
+@admin_required
+def download_respaldo(filename):
+    backups_dir = os.path.join(current_app.root_path, 'app', 'static', 'backups')
+    filepath = os.path.join(backups_dir, filename)
+    
+    if os.path.exists(filepath):
+        return send_file(filepath, as_attachment=True, download_name=filename)
+    
+    flash('Respaldo no encontrado.', 'danger')
+    return redirect(url_for('admin.respaldos'))
+
