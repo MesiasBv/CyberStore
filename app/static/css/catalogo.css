@@ -2,21 +2,21 @@
 .logos-marquee {
   overflow: hidden;
   background: linear-gradient(90deg, #1a1a24, #0f0f13, #1a1a24);
-  padding: 20px 0;
+  padding: 8px 0;
   position: relative;
 }
 
 .track {
   display: flex;
   animation: scroll 30s linear infinite;
-  gap: 40px;
+  gap: 60px;
   width: max-content;
-  height: 80px;
+  height: 110px;
 }
 
 .logo-item {
   flex: 0 0 auto;
-  height: 60px;
+  height: 100px;
   display: flex;
   align-items: center;
 }
@@ -24,13 +24,17 @@
 .logo-item img {
   height: 100%;
   width: auto;
-  max-width: 150px;
+  max-width: 300px;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
   transition: transform 0.3s ease;
 }
 
 .logo-item:hover img {
   transform: scale(1.1);
+}
+
+.logos-marquee:hover .track {
+  animation-play-state: paused;
 }
 
 @keyframes scroll {
@@ -49,9 +53,9 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .track { gap: 20px; }
-  .logo-item { height: 50px; }
-  .logo-item img { max-width: 100px; }
+  .track { gap: 30px; }
+  .logo-item { height: 60px; }
+  .logo-item img { max-width: 200px; }
   @keyframes scroll { 
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }

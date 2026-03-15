@@ -158,7 +158,7 @@
         
         container.innerHTML = html;
     }
-    
+
     // Función para limpiar filtros
     function limpiarFiltros() {
         const inputBusqueda = document.querySelector('input[name="busqueda"]');
@@ -171,36 +171,232 @@
         
         buscarProductos();
     }
+
+// Agregar eventos a los inputs
+document.addEventListener('DOMContentLoaded', function() {
+    const inputBusqueda = document.querySelector('input[name="busqueda"]');
+    const selectCategoria = document.querySelector('select[name="categoria"]');
+    const selectOrden = document.querySelector('select[name="orden"]');
     
-    // Agregar eventos a los inputs
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputBusqueda = document.querySelector('input[name="busqueda"]');
-        const selectCategoria = document.querySelector('select[name="categoria"]');
-        const selectOrden = document.querySelector('select[name="orden"]');
-        
-        if (inputBusqueda) {
-            inputBusqueda.addEventListener('input', buscarProductos);
-        }
-        
-        if (selectCategoria) {
-            selectCategoria.addEventListener('change', buscarProductos);
-        }
-        
-        if (selectOrden) {
-            selectOrden.addEventListener('change', buscarProductos);
-        }
-        
-        // Cargar productos iniciales al abrir la página
-        cargarProductosIniciales();
-    });
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener('input', buscarProductos);
+    }
+    
+    if (selectCategoria) {
+        selectCategoria.addEventListener('change', buscarProductos);
+    }
+    
+    if (selectOrden) {
+        selectOrden.addEventListener('change', buscarProductos);
+    }
+    
+    // Cargar productos iniciales al abrir la página
+    cargarProductosIniciales();
+});
 </script>
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="fw-bold text-white"><i class="fa-solid fa-store text-cyber"></i> Catálogo de Productos</h2>
-        <p class="text-secondary">Explora todos nuestros productos disponibles</p>
+
+<!-- Modales de detalle y compra para cada producto -->
+{% for p in productos %}
+<!-- Modal de detalle con acordeón/desplegable -->
+<div class="modal fade" id="modalDetalle{{ p.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-secondary text-white">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Detalle {{ p.nombre_producto }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <img src="{{ url_for('static', filename=p.imagen_url) if p.imagen_url else '#' }}" class="rounded shadow border border-secondary" style="width: 150px; aspect-ratio: 1/1; object-fit: cover;">
+                </div>
+                <h6 class="text-white mb-2">{{ p.nombre_producto }}</h6>
+                <!-- Acordeón para descripción, condiciones y solicitud -->
+                <div class="accordion accordion-dark" id="acordeonDetalle{{ p.id }}">
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header" id="condicionesHeading{{ p.id }}">
+                            <button class="accordion-button bg-dark text-warning collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#condicionesCollapse{{ p.id }}" aria-expanded="false" aria-controls="condicionesCollapse{{ p.id }}">
+                                <i class="fa-solid fa-info-circle me-2"></i> Condiciones de uso
+                            </button>
+                        </h2>
+                        <div id="condicionesCollapse{{ p.id }}" class="accordion-collapse collapse" aria-labelledby="condicionesHeading{{ p.id }}" data-bs-parent="#acordeonDetalle{{ p.id }}">
+                            <div class="accordion-body text-secondary">
+                                {% if p.condicion_uso %}
+                                    <ul class="mb-0">
+                                        {{ p.condicion_uso | safe }}
+                                    </ul>
+                                {% else %}
+                                    Sin condiciones especiales.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header" id="descripcionHeading{{ p.id }}">
+                            <button class="accordion-button bg-dark text-info collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#descripcionCollapse{{ p.id }}" aria-expanded="false" aria-controls="descripcionCollapse{{ p.id }}">
+                                <i class="fa-solid fa-film me-2"></i> Descripción del producto
+                            </button>
+                        </h2>
+                        <div id="descripcionCollapse{{ p.id }}" class="accordion-collapse collapse" aria-labelledby="descripcionHeading{{ p.id }}" data-bs-parent="#acordeonDetalle{{ p.id }}">
+                            <div class="accordion-body text-secondary">
+                                {{ p.descripcion | safe if p.descripcion else 'Sin descripción' }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header" id="solicitudHeading{{ p.id }}">
+                            <button class="accordion-button bg-dark text-cyber collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#solicitudCollapse{{ p.id }}" aria-expanded="false" aria-controls="solicitudCollapse{{ p.id }}">
+                                <i class="fa-solid fa-paper-plane me-2"></i> Detalle de solicitud
+                            </button>
+                        </h2>
+                        <div id="solicitudCollapse{{ p.id }}" class="accordion-collapse collapse" aria-labelledby="solicitudHeading{{ p.id }}" data-bs-parent="#acordeonDetalle{{ p.id }}">
+                            <div class="accordion-body text-secondary">
+                                {% if p.detalle_solicitud %}
+                                    {{ p.detalle_solicitud | safe }}
+                                {% else %}
+                                    No se requiere información adicional para la compra.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
+<!-- Modal compra -->
+<div class="modal fade" id="modalCompra{{ p.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-secondary text-white">
+            
+            <div class="modal-header border-secondary d-flex justify-content-between align-items-start">
+                <h5 class="modal-title fw-bold text-uppercase">{{ p.nombre_producto }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
 
+            <form action="{{ url_for('public.procesar_compra', id=p.id) }}" method="POST" class="m-0">
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <img src="{{ url_for('static', filename=p.imagen_url) if p.imagen_url else '#' }}" class="rounded border border-secondary me-3 object-fit-cover" style="width: 80px; height: 80px; aspect-ratio: 1/1;">
+                        <div>
+                            <h2 class="text-warning fw-bold mb-0">S/ {{ "%.2f"|format(p.precio) }}</h2>
+                            <p class="text-secondary small m-0">{{ p.descripcion[:60] | striptags if p.descripcion else '' }}...</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="fw-bold mb-2 small">Tiempo de compra</p>
+                        <div class="d-flex gap-2">
+                            <div class="border border-warning rounded p-2 text-center bg-warning bg-opacity-10" style="min-width: 100px;">
+                                <div class="text-warning fw-bold">30 días</div>
+                                <div class="small bg-warning text-dark rounded mt-1 fw-bold">S/ {{ "%.2f"|format(p.precio) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if p.tipo_entrega == 'cliente_propio' %}
+                    <div class="alert alert-info mb-3">
+                        <i class="fa-solid fa-info-circle me-2"></i>
+                        <strong>Activación a Dominio</strong><br>
+                        <small>Por favor ingresa el correo donde deseas recibir la cuenta.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white">Correo electrónico para activación *</label>
+                        <input type="email" name="correo_cliente" class="form-control bg-dark border-secondary text-white" placeholder="tucorreo@ejemplo.com" required>
+                        <small class="text-secondary">El proveedor creará la cuenta en este correo.</small>
+                    </div>
+                    {% else %}
+                    <input type="hidden" name="correo_cliente" value="">
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer border-secondary justify-content-end">
+                    <button type="button" class="btn btn-light text-dark fw-bold px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4"><i class="fa-solid fa-check"></i> Pagar ahora</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endfor %}
+<!-- Modales de detalle para cada producto -->
+{% for p in productos %}
+<!-- Modal de detalle con acordeón/desplegable -->
+<div class="modal fade" id="modalDetalle{{ p.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-secondary text-white">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Detalle {{ p.nombre_producto }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <img src="{{ url_for('static', filename=p.imagen_url) if p.imagen_url else '#' }}" class="rounded shadow border border-secondary" style="width: 150px; aspect-ratio: 1/1; object-fit: cover;">
+                </div>
+                <h6 class="text-white mb-2">{{ p.nombre_producto }}</h6>
+                <!-- Acordeón para condiciones, descripción y solicitud (orden correcto) -->
+                <div class="accordion accordion-dark" id="acordeonDetalle{{ p.id }}">
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header" id="condicionesHeading{{ p.id }}">
+                            <button class="accordion-button bg-dark text-warning collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#condicionesCollapse{{ p.id }}" aria-expanded="false" aria-controls="condicionesCollapse{{ p.id }}">
+                                <i class="fa-solid fa-info-circle me-2"></i> Condiciones de uso
+                            </button>
+                        </h2>
+                        <div id="condicionesCollapse{{ p.id }}" class="accordion-collapse collapse" aria-labelledby="condicionesHeading{{ p.id }}" data-bs-parent="#acordeonDetalle{{ p.id }}">
+                            <div class="accordion-body text-secondary">
+                                {% if p.condicion_uso %}
+                                    <ul class="mb-0">
+                                        {{ p.condicion_uso | safe }}
+                                    </ul>
+                                {% else %}
+                                    Sin condiciones especiales.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header" id="descripcionHeading{{ p.id }}">
+                            <button class="accordion-button bg-dark text-info collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#descripcionCollapse{{ p.id }}" aria-expanded="false" aria-controls="descripcionCollapse{{ p.id }}">
+                                <i class="fa-solid fa-film me-2"></i> Descripción del producto
+                            </button>
+                        </h2>
+                        <div id="descripcionCollapse{{ p.id }}" class="accordion-collapse collapse" aria-labelledby="descripcionHeading{{ p.id }}" data-bs-parent="#acordeonDetalle{{ p.id }}">
+                            <div class="accordion-body text-secondary">
+                                {{ p.descripcion | safe if p.descripcion else 'Sin descripción' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header" id="solicitudHeading{{ p.id }}">
+                            <button class="accordion-button bg-dark text-cyber collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#solicitudCollapse{{ p.id }}" aria-expanded="false" aria-controls="solicitudCollapse{{ p.id }}">
+                                <i class="fa-solid fa-paper-plane me-2"></i> Detalle de solicitud
+                            </button>
+                        </h2>
+                        <div id="solicitudCollapse{{ p.id }}" class="accordion-collapse collapse" aria-labelledby="solicitudHeading{{ p.id }}" data-bs-parent="#acordeonDetalle{{ p.id }}">
+                            <div class="accordion-body text-secondary">
+                                {% if p.detalle_solicitud %}
+                                    {{ p.detalle_solicitud | safe }}
+                                {% else %}
+                                    No se requiere información adicional para la compra.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fin acordeón -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 <!-- Buscador, Filtro por Categoría y Ordenamiento -->
 <div class="card card-dark border-0 shadow mb-4">
     <div class="card-body">
@@ -280,7 +476,17 @@
     <div class="logo-item">
       <img src="/static/img/logos/canvapro.png" alt="Canva Pro" data-search="canva" class="logo-clickable-producto" style="cursor: pointer;" />
     </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/iptv.png" alt="IPTV" data-search="iptv" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/universal.png" alt="Universal" data-search="universal" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/directv.png" alt="Directv" data-search="directv" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
     <!-- Loop 2 - Seamless -->
+
     <div class="logo-item">
       <img src="/static/img/logos/netflix.png" alt="Netflix" data-search="netflix" class="logo-clickable-producto" style="cursor: pointer;" />
     </div>
@@ -308,8 +514,18 @@
     <div class="logo-item">
       <img src="/static/img/logos/canvapro.png" alt="Canva Pro" data-search="canva" class="logo-clickable-producto" style="cursor: pointer;" />
     </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/iptv.png" alt="IPTV" data-search="iptv" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/universal.png" alt="Universal" data-search="universal" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/directv.png" alt="Directv" data-search="directv" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
   </div>
 </div>
+
 
 <!-- Resultados -->
 <div class="row" id="productos-container">
@@ -360,8 +576,8 @@
 
 <!-- Modales de compra para cada producto -->
 {% for p in productos %}
-{% set stock = p.stock_disponible() %}
-{% if stock > 0 %}
+{% set stock = 1 %}
+{% if true %}
 <div class="modal fade" id="modalCompra{{ p.id }}" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-dark border-secondary text-white">
