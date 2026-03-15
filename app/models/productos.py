@@ -1,13 +1,6 @@
 from app import db
 from datetime import datetime
-from zoneinfo import ZoneInfo
-
-def obtener_hora_peru():
-    return datetime.now(ZoneInfo("America/Lima"))
-</xai:function_call name="edit_file">
-
-<xai:function_call name="edit_file">
-<parameter name="path">c:/Users/mesias/Downloads/CyberStore/app/models/productos.py
+from app.utils.hora_peru import obtener_hora_peru
 
 def generar_gestion_uso(categoria_nombre, tipo_producto, tipo_entrega):
     """Genera automáticamente la gestión de uso basada en categoría, tipo de producto y tipo de entrega"""
@@ -150,5 +143,6 @@ class InventarioStock(db.Model):
     codigo_licencia = db.Column(db.String(255), nullable=True)
     
     estado = db.Column(db.Enum('Disponible', 'Vendido', 'Baneada/Inactiva'), default='Disponible')
-    fecha_ingreso = db.Column(db.DateTime, default=datetime.now)
+    fecha_ingreso = db.Column(db.DateTime, default=obtener_hora_peru)
     fecha_expiracion = db.Column(db.Date, nullable=True)
+
