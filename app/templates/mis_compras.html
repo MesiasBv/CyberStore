@@ -47,9 +47,11 @@
                             <th>Código</th>
                             <th>Precio Pagado</th>
                             <th>Fecha</th>
-<th class="text-center">Estado de Entrega</th>
-                            <th class="text-center">Soporte</th>
+                            <th class="text-center">Estado de Entrega</th>
+                            <th class="text-center">Expiración</th>
                             <th class="text-center">Datos de Acceso</th>
+                            <th class="text-center">Renovar</th>
+                            <th class="text-center">Soporte</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,19 +78,20 @@
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                {% if c.proveedor and c.proveedor.telefono_contacto %}
-                                    <a href="https://wa.me/51{{ c.proveedor.telefono_contacto }}?text=Hola,%20tengo%20una%20consulta%20sobre%20mi%20compra%20{{ c.codigo_unico }}%20(%20{{ c.producto.nombre_producto }}%20)" 
-                                       target="_blank" class="btn btn-success btn-sm">
-                                        <i class="fa-brands fa-whatsapp"></i> Soporte
-                                    </a>
+                                {% if c.fecha_fin_servicio %}
+                                    {% if c.fecha_fin_servicio %}
+                                        <span class="badge bg-info small">{{ c.fecha_fin_servicio.strftime('%d/%m/%y') }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">-</span>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="text-secondary small">No disponible</span>
+                                    <span class="badge bg-secondary">-</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
                                 {% if c.producto.tipo_entrega == 'cliente_propio' %}
                                     <button class="btn btn-cyber-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalCorreo{{ c.id }}">
-                                        <i class="fa-brands fa-whatsapp"></i> Contactar Proveedor
+                                        <i class="fa-brands fa-whatsapp"></i> Contactar
                                     </button>
                                 {% elif c.producto.tipo_entrega == 'codigo' %}
                                     <button class="btn btn-cyber-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalCuenta{{ c.id }}">
@@ -102,6 +105,21 @@
                                     {% else %}
                                         <span class="badge bg-warning text-dark">Sin datos</span>
                                     {% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-warning btn-sm renovar-btn" data-venta-id="{{ c.id }}" data-fecha-fin="{{ c.fecha_fin_servicio.strftime('%Y-%m-%d') if c.fecha_fin_servicio else '' }}" data-producto="{{ c.producto.nombre_producto }}" title="Renovar">
+                                    <i class="fa-solid fa-sync-alt"></i>
+                                </button>
+                            </td>
+                            <td class="text-center">
+                                {% if c.proveedor and c.proveedor.telefono_contacto %}
+                                    <a href="https://wa.me/51{{ c.proveedor.telefono_contacto }}?text=Hola,%20tengo%20una%20consulta%20sobre%20mi%20compra%20{{ c.codigo_unico }}%20(%20{{ c.producto.nombre_producto }}%20)" 
+                                       target="_blank" class="btn btn-success btn-sm">
+                                        <i class="fa-brands fa-whatsapp"></i> Soporte
+                                    </a>
+                                {% else %}
+                                    <span class="text-secondary small">No disponible</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -353,6 +371,55 @@
             modal.addEventListener('shown.bs.modal', function() {
                 var ventaId = this.getAttribute('data-venta-id');
                 if (ventaId) cargarCredencialesActualizadas(ventaId);
+            });
+        });
+        
+        // Validación de renovación
+        document.querySelectorAll('.renovar-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                var ventaId = this.dataset.ventaId;
+                var fechaFinStr = this.dataset.fechaFin;
+                var producto = this.dataset.producto;
+                
+                if (!fechaFinStr) {
+                    alert('No se puede renovar: fecha de expiración no definida');
+                    return;
+                }
+                
+                var fechaFin = new Date(fechaFinStr);
+                var hoy = new Date();
+                hoy.setHours(0,0,0,0);
+                
+                var diffDias = Math.floor((fechaFin - hoy) / (1000 * 60 * 60 * 24));
+                
+                if (diffDias > 1) {
+                    alert(`Muy pronto para renovar ${producto}.\\nTe quedan ${diffDias} días. Puedes renovar a partir del ${fechaFin.toLocaleDateString('es-PE')}`);
+                    return;
+                }
+                
+                var mensaje = `¿Renovar ${producto} por 30 días más?`;
+                if (diffDias <= 0) {
+                    mensaje = `¡${producto} vencido! ¿Renovar desde hoy (30 días nuevos)?`;
+                } else {
+                    mensaje += ` (Te quedan ${diffDias} días)`;
+                }
+                
+                if (confirm(mensaje)) {
+                    fetch('/renovar-confirmar/' + ventaId, {method: 'POST'})
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Error de conexión');
+                            console.error(error);
+                        });
+                }
             });
         });
     });

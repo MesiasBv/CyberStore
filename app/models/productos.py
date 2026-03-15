@@ -142,5 +142,5 @@ class InventarioStock(db.Model):
     codigo_licencia = db.Column(db.String(255), nullable=True)
     
     estado = db.Column(db.Enum('Disponible', 'Vendido', 'Baneada/Inactiva'), default='Disponible')
-    fecha_ingreso = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_ingreso = db.Column(db.DateTime, default=datetime.now)
     fecha_expiracion = db.Column(db.Date, nullable=True)

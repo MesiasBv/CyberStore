@@ -1,0 +1,64 @@
+/* ANIMACIÓN LOGOS MARQUEE - CATÁLOGO */
+.logos-marquee {
+  overflow: hidden;
+  background: linear-gradient(90deg, #1a1a24, #0f0f13, #1a1a24);
+  padding: 20px 0;
+  position: relative;
+}
+
+.track {
+  display: flex;
+  animation: scroll 30s linear infinite;
+  gap: 40px;
+  width: max-content;
+  height: 80px;
+}
+
+.logo-item {
+  flex: 0 0 auto;
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.logo-item img {
+  height: 100%;
+  width: auto;
+  max-width: 150px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  transition: transform 0.3s ease;
+}
+
+.logo-item:hover img {
+  transform: scale(1.1);
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Light theme */
+[data-bs-theme="light"] .logos-marquee {
+  background: linear-gradient(90deg, #f8f9fa, #e9ecef, #f8f9fa);
+}
+
+[data-bs-theme="light"] .logo-item img {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .track { gap: 20px; }
+  .logo-item { height: 50px; }
+  .logo-item img { max-width: 100px; }
+  @keyframes scroll { 
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+}
+
+/* Pause on hover */
+.logos-marquee:hover .track {
+  animation-play-state: paused;
+}

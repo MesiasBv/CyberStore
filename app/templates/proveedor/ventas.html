@@ -133,6 +133,9 @@
                             <i class="fa-solid fa-check"></i>
                         </button>
                         {% endif %}
+                        <button class="btn btn-sm btn-warning" onclick="if(confirm('¿Notificar {{ v.cliente.nombre_completo }} para renovar?')) fetch('/proveedor/renovar-notificar/{{ v.id }}',{method:'POST'}).then(()=>location.reload());" title="Notificar renovación">
+                            <i class="fa-solid fa-sync-alt"></i>
+                        </button>
                     </td>
                 </tr>
                 

@@ -385,6 +385,15 @@ def guardar_stock():
         flash('Producto no encontrado.', 'danger')
         return redirect(url_for('proveedor.cargar_inventario'))
     
+    try:
+        cantidad = int(request.form.get('cantidad', 1))
+        if cantidad < 1 or cantidad > 50:
+            flash('La cantidad debe ser un número entero entre 1 y 50.', 'danger')
+            return redirect(url_for('proveedor.mi_stock'))
+    except ValueError:
+        flash('La cantidad debe ser un número entero válido.', 'danger')
+        return redirect(url_for('proveedor.mi_stock'))
+    
     tipo_cuenta = producto.tipo_producto
     
     tipo_cuenta_form = request.form.get('tipo_cuenta')
@@ -404,23 +413,26 @@ def guardar_stock():
     fecha_exp_date = None
     if fecha_expiracion:
         fecha_exp_date = datetime.strptime(fecha_expiracion, '%Y-%m-%d').date()
-
-    nuevo_stock = InventarioStock(
-        producto_id=producto_id,
-        proveedor_id=session.get('usuario_id'),
-        tipo_cuenta=tipo_cuenta,
-        correo_acceso=correo,
-        password_acceso=password,
-        nombre_perfil_asignado=perfil,
-        pin_seguridad=pin,
-        codigo_licencia=licencia,
-        fecha_expiracion=fecha_exp_date,
-        estado='Disponible'
-    )
-
-    db.session.add(nuevo_stock)
+    
+    cuentas_creadas = 0
+    for _ in range(cantidad):
+        nuevo_stock = InventarioStock(
+            producto_id=producto_id,
+            proveedor_id=session.get('usuario_id'),
+            tipo_cuenta=tipo_cuenta,
+            correo_acceso=correo,
+            password_acceso=password,
+            nombre_perfil_asignado=perfil,
+            pin_seguridad=pin,
+            codigo_licencia=licencia,
+            fecha_expiracion=fecha_exp_date,
+            estado='Disponible'
+        )
+        db.session.add(nuevo_stock)
+        cuentas_creadas += 1
+    
     db.session.commit()
-    flash('Cuenta cargada exitosamente al inventario!', 'success')
+    flash(f'¡{cuentas_creadas} cuentas cargadas exitosamente al inventario!', 'success')
     return redirect(url_for('proveedor.mi_stock'))
 
 @proveedor_bp.route('/stock/editar/<int:id>', methods=['POST'])

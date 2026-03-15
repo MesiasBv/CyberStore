@@ -52,9 +52,9 @@ def catalogo():
     if busqueda:
         query = query.filter(Producto.nombre_producto.ilike(f'%{busqueda}%'))
     
-    # Aplicar filtro de categoría
+    # Aplicar filtro de categoría  
     if categoria_id:
-        query = query.filter_by(categoria_id=categoria_id)
+        query = query.filter(Producto.categoria_id == categoria_id)
     
     productos = query.all()
     
@@ -87,7 +87,7 @@ def buscar_productos():
     
     # Aplicar filtro de categoría
     if categoria_id:
-        query = query.filter_by(categoria_id=categoria_id)
+        query = query.filter(Producto.categoria_id == categoria_id)
     
     # Aplicar ordenamiento
     if orden == 'precio_asc':

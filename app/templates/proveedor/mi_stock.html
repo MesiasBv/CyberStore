@@ -115,7 +115,7 @@
                     </td>
                     <td class="text-center text-secondary small">
                         {% if item.fecha_ingreso %}
-                        {{ item.fecha_ingreso.strftime('%Y-%m-%d') }}
+                        {{ item.fecha_ingreso.strftime('%d/%m/%Y %H:%M') }}
                         {% else %}
                         -
                         {% endif %}
@@ -254,10 +254,20 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label text-secondary">Fecha de Expiracion</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary">Cantidad *</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" 
+                                   name="cantidad" id="cantidad" min="1" max="50" value="1" required
+                                   pattern="[0-9]*" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                   onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                   title="Solo números enteros">
+                            <small class="text-secondary">1-50 cuentas idénticas (solo números)</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary">Fecha de Expiración</label>
                             <input type="date" class="form-control bg-dark text-white border-secondary" name="fecha_expiracion" id="fecha_expiracion">
-                            <small class="text-secondary">Fecha en que expira la cuenta (cuando debes renovar)</small>
+                            <small class="text-secondary">Fecha en que expira la cuenta</small>
                         </div>
                     </div>
                 </div>
@@ -281,10 +291,16 @@ function validarFormulario() {
     }
     
     var producto = document.getElementById('producto_id').value;
+    var cantidadInput = document.getElementById('cantidad');
+    var cantidad = parseInt(cantidadInput.value);
     
-    // Solo validar que seleccione un producto (correo y password ahora son opcionales)
     if (!producto) {
         alert('Por favor seleccione un producto');
+        return false;
+    }
+    
+    if (isNaN(cantidad) || cantidad < 1 || cantidad > 50) {
+        alert('La cantidad debe ser un número entero entre 1 y 50');
         return false;
     }
     

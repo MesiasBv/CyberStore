@@ -239,19 +239,6 @@
             </div>
         </div>
         
-        <!-- Botones rápidos de categorías -->
-        <div class="mt-3">
-            <span class="text-secondary small me-2">Categorías:</span>
-            <button class="badge bg-secondary text-decoration-none btn-filtro-categoria" data-categoria="">
-                Todos
-            </button>
-            {% for cat in categorias %}
-            <button class="badge bg-secondary text-decoration-none btn-filtro-categoria" data-categoria="{{ cat.id }}">
-                {{ cat.nombre }}
-            </button>
-            {% endfor %}
-        </div>
-        
         <!-- Botón limpiar filtros -->
         <div class="mt-2">
             <button onclick="limpiarFiltros()" class="btn btn-sm btn-outline-secondary">
@@ -259,6 +246,69 @@
             </button>
         </div>
     </div>
+</div>
+
+<!-- ANIMACIÓN LOGOS PLATAFORMAS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/catalogo.css') }}">
+  <div class="logos-marquee mb-5">
+  <div class="track">
+    <!-- Loop 1 -->
+    <div class="logo-item">
+      <img src="/static/img/logos/netflix.png" alt="Netflix" data-search="netflix" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/spotify.png" alt="Spotify" data-search="spotify" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/youtube.png" alt="YouTube" data-search="youtube" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/disney.png" alt="Disney" data-search="disney" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/primevideo.png" alt="Prime Video" data-search="prime" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/hbomax.png" alt="HBO Max" data-search="hbo" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/chatgpt.png" alt="ChatGPT" data-search="chatgpt" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/capcut.png" alt="CapCut" data-search="capcut" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/canvapro.png" alt="Canva Pro" data-search="canva" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <!-- Loop 2 - Seamless -->
+    <div class="logo-item">
+      <img src="/static/img/logos/netflix.png" alt="Netflix" data-search="netflix" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/spotify.png" alt="Spotify" data-search="spotify" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/youtube.png" alt="YouTube" data-search="youtube" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/disney.png" alt="Disney" data-search="disney" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/primevideo.png" alt="Prime Video" data-search="prime" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/hbomax.png" alt="HBO Max" data-search="hbo" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/chatgpt.png" alt="ChatGPT" data-search="chatgpt" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/capcut.png" alt="CapCut" data-search="capcut" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+    <div class="logo-item">
+      <img src="/static/img/logos/canvapro.png" alt="Canva Pro" data-search="canva" class="logo-clickable-producto" style="cursor: pointer;" />
+    </div>
+  </div>
 </div>
 
 <!-- Resultados -->
@@ -273,7 +323,21 @@
 </div>
 
 <script>
-    // Event delegation para botones de categorías
+    // CLICK PRODUCTO LOGOS → Búsqueda por nombre
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.logo-clickable-producto').forEach(logo => {
+            logo.addEventListener('click', function() {
+                const searchTerm = this.dataset.search;
+                const inputBusqueda = document.querySelector('input[name="busqueda"]');
+                if (inputBusqueda) {
+                    inputBusqueda.value = searchTerm;
+                    buscarProductos();
+                }
+            });
+        });
+    });
+
+    // Event delegation para botones de categorías (mantener)
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('.btn-filtro-categoria');
         if (!btn) return;
