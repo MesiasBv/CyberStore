@@ -572,6 +572,48 @@ document.addEventListener('DOMContentLoaded', function() {
         
         buscarProductos();
     });
+
+    // CONTROL MARQUEE MOBILE - Pausa/Resume touch para logos
+    document.addEventListener('DOMContentLoaded', function() {
+        const marquee = document.querySelector('.logos-marquee');
+        const track = document.querySelector('.track');
+        if (!marquee || !track) return;
+
+        let animationResumed = true;
+
+        // Touch events para mobile
+        marquee.addEventListener('touchstart', function() {
+            track.style.animationPlayState = 'paused';
+            animationResumed = false;
+        }, { passive: true });
+
+        marquee.addEventListener('touchend', function() {
+            setTimeout(() => {
+                track.style.animationPlayState = 'running';
+                animationResumed = true;
+            }, 150); // Delay para dejar tiempo al click
+        }, { passive: true });
+
+        // Force resume después de buscar productos (en caso de interferencia AJAX)
+        const originalBuscar = window.buscarProductos;
+        window.buscarProductos = function() {
+            originalBuscar.call(this);
+            // Resume animación 500ms después de búsqueda
+            setTimeout(() => {
+                if (track && animationResumed !== false) {
+                    track.style.animationPlayState = 'running';
+                }
+            }, 500);
+        };
+
+        // Re-delegate logo clicks después de updates DOM (AJAX)
+        const observer = new MutationObserver(() => {
+            document.querySelectorAll('.logo-clickable-producto').forEach(logo => {
+                logo.style.cursor = 'pointer';
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
 </script>
 
 <!-- Modales de compra para cada producto -->

@@ -4,6 +4,10 @@
   background: linear-gradient(90deg, #1a1a24, #0f0f13, #1a1a24);
   padding: 8px 0;
   position: relative;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .track {
@@ -12,6 +16,11 @@
   gap: 60px;
   width: max-content;
   height: 110px;
+}
+
+.logos-marquee:hover .track,
+.logos-marquee:active .track {
+  animation-play-state: paused;
 }
 
 .logo-item {
@@ -53,7 +62,13 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .track { gap: 30px; }
+  .logos-marquee {
+    touch-action: manipulation;
+  }
+  .track { 
+    gap: 30px; 
+    animation-duration: 25s; /* Más rápido en móvil */
+  }
   .logo-item { height: 60px; }
   .logo-item img { max-width: 200px; }
   @keyframes scroll { 
@@ -61,5 +76,6 @@
     100% { transform: translateX(-50%); }
   }
 }
+
 
 
