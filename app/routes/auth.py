@@ -10,12 +10,12 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    # 1. Obtener IP y limpiar si es necesario
+    # 1. Obtener IP y limpiar (funciona para Local y cPanel)
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if ip and ',' in ip:
         ip = ip.split(',')[0].strip()
 
-    # 2. Nueva lógica de detección de dispositivo (Más profesional)
+    # 2. Nueva lógica de detección de dispositivo (S.O. | Navegador)
     platform = request.user_agent.platform or "PC"
     browser = request.user_agent.browser or "Navegador"
     
@@ -34,7 +34,7 @@ def login():
         identificador = request.form.get('identificador')
         password = request.form.get('password')
 
-        # Buscar al usuario en las 3 tablas
+        # 3. Buscar al usuario en las 3 tablas
         usuario = Usuario.query.filter((Usuario.correo == identificador) | (Usuario.nombre_usuario == identificador)).first()
         rol_detectado = 'Admin' if usuario else None
 
@@ -46,7 +46,7 @@ def login():
             usuario = Cliente.query.filter((Cliente.correo == identificador) | (Cliente.nombre_usuario == identificador)).first()
             rol_detectado = 'Cliente' if usuario else None
 
-        # Verificar credenciales
+        # 4. Verificar credenciales
         if usuario and check_password_hash(usuario.password_hash, password):
             if not usuario.estado:
                 flash('Tu cuenta ha sido desactivada. Contacta al administrador.', 'danger')
@@ -61,25 +61,27 @@ def login():
 
                 try:
                     msg = Message('Código de Seguridad - CyberStore', 
-                                  sender=os.environ.get('MAIL_USERNAME'),
+                                  sender=os.environ.get('MAIL_USERNAME'), # Crucial para cPanel
                                   recipients=[usuario.correo])
-                    msg.body = f'Hola {usuario.nombre_usuario},\n\nTu código es: {codigo_otp}'
+                    msg.body = f'Hola {usuario.nombre_usuario},\n\nTu código de acceso seguro es: {codigo_otp}\n\nEste código expirará en 10 minutos.'
                     mail.send(msg)
                 except Exception as e:
-                    print(f"🚨 ERROR CORREO: {str(e)}")
-                    flash('Error al enviar el código de seguridad.', 'danger')
+                    print(f"🚨 ERROR ENVÍO CORREO: {str(e)}")
+                    flash('Error al enviar el correo de seguridad.', 'danger')
                     return redirect(url_for('auth.login'))
 
                 session['pending_user_id'] = usuario.id
                 session['pending_rol'] = rol_detectado
+                flash('Hemos enviado un código de 6 dígitos a tu correo.', 'info')
                 return redirect(url_for('auth.verificar_2fa'))
 
-            # --- CASO CLIENTE (SIN 2FA) ---
+            # --- CASO CLIENTE (SIN 2FA - ACCESO DIRECTO) ---
             else:
                 import requests
                 from app.models.ventas import AuditoriaLog
                 
-                lat, lon = '-12.0464', '-77.0428' # Lima por defecto
+                # Ubicación por defecto (Lima)
+                lat, lon = '-12.0464', '-77.0428' 
                 if ip not in ['127.0.0.1', '::1', 'localhost']:
                     try:
                         geo_resp = requests.get(f'https://ipapi.co/{ip}/json/', timeout=2)
@@ -88,8 +90,9 @@ def login():
                             lat = str(geo.get('latitude', lat))
                             lon = str(geo.get('longitude', lon))
                     except:
-                        pass
+                        pass # Si falla la API, usa los valores por defecto
 
+                # Registrar Auditoría de éxito para Cliente
                 audit_log = AuditoriaLog(
                     usuario_id=usuario.id,
                     accion='login_exitoso',
@@ -107,16 +110,19 @@ def login():
                 session['usuario'] = usuario.nombre_completo.upper()
                 session['rol'] = rol_detectado
                 session.permanent = True
-                flash(f'¡Bienvenido {usuario.nombre_completo}!', 'success')
+                flash(f'¡Bienvenido a CyberStore, {usuario.nombre_completo}!', 'success')
                 return redirect(url_for('public.index'))
                 
         else:
-            # --- LOG AUDIT FALLO ---
+            # --- LOG AUDIT FALLO (Usuario no existe o pass incorrecta) ---
             from app.models.ventas import AuditoriaLog
             import requests
+            
+            # Ubicación básica para el fallo
             lat, lon = '-12.0464', '-77.0428'
             
             audit_log = AuditoriaLog(
+                usuario_id=None, # IMPORTANTE: Permitir NULL en DB
                 accion='login_fallido',
                 tabla_afectada='autenticación',
                 detalles=f'Intento fallido: {identificador[:20]}',
@@ -127,17 +133,33 @@ def login():
             )
             db.session.add(audit_log)
             db.session.commit()
-            flash('Credenciales incorrectas.', 'danger')
+            
+            flash('Credenciales incorrectas. Verifica tu usuario/correo y contraseña.', 'danger')
 
     return render_template('auth/login.html')
 
 @auth_bp.route('/verificar-2fa', methods=['GET', 'POST'])
 def verificar_2fa():
-    ip = request.remote_addr
-    user_agent = request.user_agent.string[:255]
-    dispositivo = user_agent.split('(')[0] if '(' in user_agent else user_agent[:255]
+    # 1. Obtener IP y Dispositivo con la nueva lógica
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if ip and ',' in ip:
+        ip = ip.split(',')[0].strip()
+
+    platform = request.user_agent.platform or "PC"
+    browser = request.user_agent.browser or "Navegador"
     
-    # Si alguien intenta entrar aquí sin haber pasado por el login primero, lo devolvemos
+    if 'windows' in platform.lower():
+        os_name = "Windows"
+    elif 'android' in platform.lower():
+        os_name = "Android 📱"
+    elif 'iphone' in platform.lower() or 'ipad' in platform.lower():
+        os_name = "iOS 🍎"
+    else:
+        os_name = platform.capitalize()
+
+    dispositivo_final = f"{os_name} | {browser.capitalize()}"
+
+    # Seguridad: Si no hay usuario pendiente, al login
     if 'pending_user_id' not in session:
         return redirect(url_for('auth.login'))
         
@@ -146,79 +168,69 @@ def verificar_2fa():
         user_id = session.get('pending_user_id')
         rol = session.get('pending_rol')
         
-        # Buscar al usuario según el rol que guardamos temporalmente
+        # Buscar al usuario según el rol
         usuario = Usuario.query.get(user_id) if rol == 'Admin' else Proveedor.query.get(user_id)
             
-        # Verificar el código
         if usuario and usuario.otp_code == codigo_ingresado:
-            # Comprobar si no ha expirado
+            # Comprobar expiración
             if usuario.otp_expiration and usuario.otp_expiration > datetime.utcnow():
-                # Verificar si el usuario está activo (para Admin y Proveedor)
+                
+                # --- AQUÍ ESTÁ LA SEGURIDAD QUE FALTABA ---
                 if not usuario.estado:
                     session.clear()
-                    flash('Tu cuenta ha sido desactivada. Contacta al administrador para más información.', 'danger')
+                    flash('Tu cuenta ha sido desactivada. Contacta al administrador.', 'danger')
                     return redirect(url_for('auth.login'))
                 
-                # ¡Éxito! Limpiamos el código de la base de datos por seguridad
+                # ¡Éxito! Limpiamos OTP
                 usuario.otp_code = None
                 usuario.otp_expiration = None
                 db.session.commit()
                 
-                # Convertimos la sesión temporal en una sesión real y definitiva
+                # Sesión definitiva
                 session.pop('pending_user_id', None)
                 session.pop('pending_rol', None)
                 session['usuario_id'] = usuario.id
-                # Para proveedores usamos el nombre de la empresa, para admin usamos nombre_usuario
-                if rol == 'Proveedor':
-                    session['usuario'] = usuario.nombre
-                elif rol == 'Admin':
-                    session['usuario'] = usuario.nombre_usuario
+                session['usuario'] = usuario.nombre_usuario if rol == 'Admin' else usuario.nombre
                 session['rol'] = rol
-                session.permanent = True  # Mantener sesión activa por 30 días
+                session.permanent = True
                 
-                # LOG AUDIT EXITOSO
-                try:
-                    import socket
-                    server_name = socket.gethostname()
-                except:
-                    server_name = 'Unknown'
-                
+                # LOG AUDIT (Con geolocalización)
                 import requests
-                lat, lon = '', ''
+                from app.models.ventas import AuditoriaLog
+                lat, lon = '-12.0464', '-77.0428' # Por defecto Lima
                 try:
                     geo_resp = requests.get(f'https://ipapi.co/{ip}/json/', timeout=2)
                     if geo_resp.status_code == 200:
                         geo = geo_resp.json()
-                        lat = geo.get('latitude', '')
-                        lon = geo.get('longitude', '')
+                        lat = str(geo.get('latitude', lat))
+                        lon = str(geo.get('longitude', lon))
                 except:
                     pass
-                
-                from app.models.ventas import AuditoriaLog
+
                 audit_log = AuditoriaLog(
                     usuario_id=usuario.id,
                     accion='login_exitoso',
                     tabla_afectada='autenticación',
-                    detalles=f'Login exitoso rol {rol}',
+                    detalles=f'Login exitoso 2FA rol {rol}',
                     ip_origen=ip,
-                    dispositivo=dispositivo + f' | Server: {server_name}'
+                    latitud=lat,
+                    longitud=lon,
+                    dispositivo=dispositivo_final
                 )
                 db.session.add(audit_log)
                 db.session.commit()
                 
                 flash('¡Autenticación exitosa!', 'success')
-                # --- NUEVA REDIRECCIÓN INTELIGENTE ---
+                
                 if rol == 'Admin':
                     return redirect(url_for('admin.dashboard'))
                 elif rol == 'Proveedor':
                     return redirect(url_for('proveedor.dashboard'))
                 else:
                     return redirect(url_for('public.index'))
-                                
             else:
                 flash('El código ha expirado. Por favor, inicia sesión de nuevo.', 'danger')
                 return redirect(url_for('auth.login'))
-            
         else:
             flash('El código es incorrecto.', 'danger')
             
