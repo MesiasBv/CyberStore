@@ -10,6 +10,16 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # Esta sola línea ya hace el trabajo del if/else
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    
+    # Si la IP es una lista (caso de algunos hostings), limpiamos para quedarnos con la real
+    if ip and ',' in ip:
+        ip = ip.split(',')[0].strip()
+
+    user_agent = request.user_agent.string[:255]
+    dispositivo = user_agent.split('(')[0] if '(' in user_agent else user_agent[:255]
+        
     if request.method == 'POST':
         identificador = request.form.get('identificador')
         password = request.form.get('password')
@@ -29,7 +39,7 @@ def login():
         # 2. Verificar si el usuario existe y la contraseña es correcta
         if usuario and check_password_hash(usuario.password_hash, password):
             
-            # 3. Verificar si el usuario está activo (para todos los roles)
+            # 3. Verificar si el usuario está activo
             if not usuario.estado:
                 flash('Tu cuenta ha sido desactivada. Contacta al administrador para más información.', 'danger')
                 return redirect(url_for('auth.login'))
@@ -39,47 +49,117 @@ def login():
                 # --- RUTA 2FA (ADMINS Y PROVEEDORES) ---
                 codigo_otp = str(random.randint(100000, 999999))
                 usuario.otp_code = codigo_otp
-                usuario.otp_expiration = datetime.utcnow() + timedelta(minutes=10) # Expira en 10 min
+                usuario.otp_expiration = datetime.utcnow() + timedelta(minutes=10)
                 db.session.commit()
 
-                # Enviar el correo con Flask-Mail
                 try:
                     msg = Message('Código de Seguridad - CyberStore', recipients=[usuario.correo])
-                    msg.body = f'Hola {usuario.nombre_usuario},\n\nTu código de acceso seguro es: {codigo_otp}\n\nEste código expirará en 10 minutos. No lo compartas con nadie.'
+                    msg.body = f'Hola {usuario.nombre_usuario},\n\nTu código de acceso seguro es: {codigo_otp}\n\nEste código expirará en 10 minutos.'
                     mail.send(msg)
                 except Exception as e:
-                    print(f"\n=====================================")
-                    print(f"🚨 ERROR DETALLADO AL ENVIAR CORREO:")
-                    print(str(e))
-                    print(f"=====================================\n")
-                    
+                    print(f"🚨 ERROR ENVÍO CORREO: {str(e)}")
                     flash('Error al enviar el correo. Revisa la configuración de tu Gmail.', 'danger')
                     return redirect(url_for('auth.login'))
 
-                # Guardar en sesión temporal y mandar a verificar
                 session['pending_user_id'] = usuario.id
                 session['pending_rol'] = rol_detectado
-                
                 flash('Hemos enviado un código de 6 dígitos a tu correo.', 'info')
                 return redirect(url_for('auth.verificar_2fa'))
 
             else:
                 # --- RUTA DIRECTA (CLIENTES) ---
-                # Usamos nombre_completo en mayúsculas para clientes
+                import socket
+                import requests
+                try:
+                    server_name = socket.gethostname()
+                except:
+                    server_name = 'Unknown'
+                
+                from app.models.ventas import AuditoriaLog
+                
+                # Definimos Lima como respaldo INICIAL
+                lat, lon = '-12.0464', '-77.0428' 
+                
+                # Intentamos obtener coordenadas REALES si la IP no es local
+                if ip not in ['127.0.0.1', '172.20.10.1', '::1', 'localhost']:
+                    try:
+                        geo_resp = requests.get(f'https://ipapi.co/{ip}/json/', timeout=2)
+                        if geo_resp.status_code == 200:
+                            geo = geo_resp.json()
+                            # Solo si la API devuelve datos válidos, reemplazamos Lima
+                            if geo.get('latitude'):
+                                lat = str(geo.get('latitude'))
+                                lon = str(geo.get('longitude'))
+                    except:
+                        pass # Si falla la API, se queda con Lima
+                
+                audit_log = AuditoriaLog(
+                    usuario_id=usuario.id,
+                    accion='login_exitoso',
+                    tabla_afectada='autenticación',
+                    detalles=f'Login exitoso rol {rol_detectado}',
+                    ip_origen=ip,
+                    latitud=lat,
+                    longitud=lon,
+                    dispositivo=dispositivo + f' | Server: {server_name}'
+                )
+
+                db.session.add(audit_log)
+                db.session.commit()
+                
                 session['usuario_id'] = usuario.id
                 session['usuario'] = usuario.nombre_completo.upper()
                 session['rol'] = rol_detectado
-                session.permanent = True  # Mantener sesión activa por 30 días
+                session.permanent = True
                 flash(f'¡Bienvenido a CyberStore, {usuario.nombre_completo}!', 'success')
                 return redirect(url_for('public.index'))
                 
         else:
+            # --- LOG AUDIT FALLO ---
+            import socket
+            import requests
+            try:
+                server_name = socket.gethostname()
+            except:
+                server_name = 'Unknown'
+            
+            lat, lon = '-12.0464', '-77.0428' # Respaldo inicial
+            
+            if ip not in ['127.0.0.1', '172.20.10.1', '::1', 'localhost']:
+                try:
+                    geo_resp = requests.get(f'https://ipapi.co/{ip}/json/', timeout=2)
+                    if geo_resp.status_code == 200:
+                        geo = geo_resp.json()
+                        if geo.get('latitude'):
+                            lat = str(geo.get('latitude'))
+                            lon = str(geo.get('longitude'))
+                except:
+                    pass
+            
+            from app.models.ventas import AuditoriaLog
+            audit_log = AuditoriaLog(
+                accion='login_fallido',
+                tabla_afectada='autenticación',
+                detalles=f'Intento login fallido identificador: {identificador[:20]}',
+                ip_origen=ip,
+                latitud=lat,
+                longitud=lon,
+                dispositivo=dispositivo + f' | Server: {server_name}'
+            )
+
+            db.session.add(audit_log)
+            db.session.commit()
+            
             flash('Credenciales incorrectas. Verifica tu usuario/correo y contraseña.', 'danger')
 
     return render_template('auth/login.html')
 
 @auth_bp.route('/verificar-2fa', methods=['GET', 'POST'])
 def verificar_2fa():
+    ip = request.remote_addr
+    user_agent = request.user_agent.string[:255]
+    dispositivo = user_agent.split('(')[0] if '(' in user_agent else user_agent[:255]
+    
     # Si alguien intenta entrar aquí sin haber pasado por el login primero, lo devolvemos
     if 'pending_user_id' not in session:
         return redirect(url_for('auth.login'))
@@ -118,6 +198,36 @@ def verificar_2fa():
                     session['usuario'] = usuario.nombre_usuario
                 session['rol'] = rol
                 session.permanent = True  # Mantener sesión activa por 30 días
+                
+                # LOG AUDIT EXITOSO
+                try:
+                    import socket
+                    server_name = socket.gethostname()
+                except:
+                    server_name = 'Unknown'
+                
+                import requests
+                lat, lon = '', ''
+                try:
+                    geo_resp = requests.get(f'https://ipapi.co/{ip}/json/', timeout=2)
+                    if geo_resp.status_code == 200:
+                        geo = geo_resp.json()
+                        lat = geo.get('latitude', '')
+                        lon = geo.get('longitude', '')
+                except:
+                    pass
+                
+                from app.models.ventas import AuditoriaLog
+                audit_log = AuditoriaLog(
+                    usuario_id=usuario.id,
+                    accion='login_exitoso',
+                    tabla_afectada='autenticación',
+                    detalles=f'Login exitoso rol {rol}',
+                    ip_origen=ip,
+                    dispositivo=dispositivo + f' | Server: {server_name}'
+                )
+                db.session.add(audit_log)
+                db.session.commit()
                 
                 flash('¡Autenticación exitosa!', 'success')
                 # --- NUEVA REDIRECCIÓN INTELIGENTE ---
@@ -189,7 +299,41 @@ def registro():
 
         db.session.add(nuevo_cliente)
         db.session.commit()
-
+        
+        # LOG AUDIT REGISTRO
+        ip = request.remote_addr
+        user_agent = request.user_agent.string[:255]
+        dispositivo = user_agent.split('(')[0] if '(' in user_agent else user_agent[:255]
+        
+        try:
+            import socket
+            server_name = socket.gethostname()
+        except:
+            server_name = 'Unknown'
+        
+        lat, lon = '', ''
+        try:
+            geo_resp = requests.get(f'https://ipapi.co/{ip}/json/', timeout=2)
+            if geo_resp.status_code == 200:
+                geo = geo_resp.json()
+                lat = geo.get('latitude', '')
+                lon = geo.get('longitude', '')
+        except:
+            pass
+        
+        from app.models.ventas import AuditoriaLog
+        audit_log = AuditoriaLog(
+            accion='registro_cliente',
+            tabla_afectada='clientes',
+            detalles=f'Registro cliente {nuevo_cliente.nombre_completo} id:{nuevo_cliente.id}',
+            ip_origen=ip,
+            latitud=lat,
+            longitud=lon,
+            dispositivo=dispositivo + f' | Server: {server_name}'
+        )
+        db.session.add(audit_log)
+        db.session.commit()
+        
         flash('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.', 'success')
         return redirect(url_for('auth.login'))
 

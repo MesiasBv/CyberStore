@@ -367,6 +367,75 @@ def sugerencias():
     sugerencias_list = Sugerencia.query.order_by(Sugerencia.id.desc()).all()
     return render_template('admin/sugerencias.html', sugerencias=sugerencias_list)
 
+@admin_bp.route('/auditoria')
+@admin_required
+def auditoria():
+    from app.models.ventas import AuditoriaLog, MovimientoSaldo
+    
+    # Parámetros de filtro
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    tipo_accion = request.args.get('tipo_accion')
+    ip = request.args.get('ip')
+    
+    hoy = date.today()
+    
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+        except:
+            fecha_inicio = hoy - timedelta(days=7)
+            fecha_fin = hoy
+    else:
+        fecha_inicio = hoy - timedelta(days=7)
+        fecha_fin = hoy
+    
+    fecha_inicio_dt = datetime.combine(fecha_inicio, datetime.min.time())
+    fecha_fin_dt = datetime.combine(fecha_fin, datetime.max.time())
+    
+    # Query logs auditoría
+    query_logs = AuditoriaLog.query.filter(
+        AuditoriaLog.fecha_accion >= fecha_inicio_dt,
+        AuditoriaLog.fecha_accion <= fecha_fin_dt
+    )
+    
+    if tipo_accion:
+        query_logs = query_logs.filter(AuditoriaLog.accion == tipo_accion)
+    
+    if ip:
+        query_logs = query_logs.filter(AuditoriaLog.ip_origen.contains(ip))
+    
+    logs = query_logs.order_by(AuditoriaLog.fecha_accion.desc()).all()
+    
+    # Movimientos saldo
+    query_mov = MovimientoSaldo.query.filter(
+        MovimientoSaldo.fecha_movimiento >= fecha_inicio_dt,
+        MovimientoSaldo.fecha_movimiento <= fecha_fin_dt
+    )
+    
+    movimientos = query_mov.order_by(MovimientoSaldo.fecha_movimiento.desc()).all()
+    
+    # Stats
+    total_logs = len(logs)
+    total_mov = len(movimientos)
+    logins_fallidos = len([l for l in logs if 'login fallido' in l.accion.lower()])
+    
+    hoy = date.today()
+    semana = hoy - timedelta(days=7)
+    return render_template('admin/auditoria.html', 
+                          logs=logs, 
+                          movimientos=movimientos, 
+                          fecha_inicio=fecha_inicio, 
+                          fecha_fin=fecha_fin,
+                          tipo_accion=tipo_accion, 
+                          ip=ip,
+                          total_logs=total_logs,
+                          total_mov=total_mov,
+                          logins_fallidos=logins_fallidos,
+                          fecha_hoy=hoy.strftime('%Y-%m-%d'),
+                          fecha_semana=semana.strftime('%Y-%m-%d'))
+
 @admin_bp.route('/sugerencias/toggle/<int:id>', methods=['POST'])
 @admin_required
 def toggle_sugerencia(id):

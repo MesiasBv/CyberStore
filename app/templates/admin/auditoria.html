@@ -1,0 +1,233 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Auditoría Avanzada - Admin{% endblock %}
+{% block page_title %}Auditoría y Logs del Sistema{% endblock %}
+
+{% block content %}
+<!-- Filtros -->
+<div class="card card-dark border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin.auditoria') }}" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Fecha Inicio</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio.strftime('%Y-%m-%d') if fecha_inicio else '' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Fecha Fin</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin.strftime('%Y-%m-%d') if fecha_fin else '' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Acción</label>
+                <select name="tipo_accion" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="login_exitoso">Login Exitoso</option>
+                    <option value="login_fallido">Login Fallido</option>
+                    <option value="compra_realizada">Compra Realizada</option>
+                    <option value="recarga_saldo">Recarga Saldo</option>
+                    <option value="estado_modificado">Estado Modificado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">IP</label>
+                <input type="text" name="ip" class="form-control" placeholder="192.168.1.1" value="{{ ip or '' }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-cyber me-2">
+                    <i class="fa-solid fa-filter"></i> Filtrar
+                </button>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <a href="{{ url_for('admin.auditoria') }}" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-rotate-left"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-dark text-center p-4 shadow">
+            <i class="fa-solid fa-file-lines fa-3x text-info mb-3"></i>
+            <h3 class="text-white">{{ total_logs }}</h3>
+            <p class="text-secondary">Logs Auditoría</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dark text-center p-4 shadow">
+            <i class="fa-solid fa-wallet fa-3x text-success mb-3"></i>
+            <h3 class="text-white">{{ total_mov }}</h3>
+            <p class="text-secondary">Movimientos Saldo</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dark text-center p-4 shadow">
+            <i class="fa-solid fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+            <h3 class="text-white">{{ logins_fallidos }}</h3>
+            <p class="text-secondary">Logins Fallidos</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dark text-center p-4 shadow">
+            <i class="fa-solid fa-chart-simple fa-3x text-warning mb-3"></i>
+            <h3 class="text-white">{{ (total_logs + total_mov) }}</h3>
+            <p class="text-secondary">Total Registros</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs: Logs y Movimientos -->
+<ul class="nav nav-tabs bg-secondary mb-4 rounded-top shadow" id="auditoriaTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active text-white border-0" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button">
+            <i class="fa-solid fa-file-lines me-2"></i>Logs Auditoría
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link text-white border-0" id="movimientos-tab" data-bs-toggle="tab" data-bs-target="#movimientos" type="button">
+            <i class="fa-solid fa-wallet me-2"></i>Movimientos Saldo
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content bg-dark rounded-bottom shadow p-0" id="auditoriaTabContent">
+    <!-- Tab Logs Auditoría -->
+    <div class="tab-pane fade show active p-4" id="logs" role="tabpanel">
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover" id="tabla-logs">
+                <thead class="sticky-top bg-secondary">
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Acción</th>
+                        <th>Usuario</th>
+                        <th>Tabla</th>
+                        <th>IP Origen</th>
+                        <th>Latitud</th>
+                        <th>Longitud</th>
+                        <th>Dispositivo</th>
+                        <th>Detalles</th>
+
+
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="{% if 'fallido' in log.accion.lower() %}table-danger{% elif 'exitoso' in log.accion.lower() %}table-success{% endif %}">
+                        <td>{{ log.fecha_accion.strftime('%d/%m %H:%M:%S') if log.fecha_accion else 'Sin fecha' }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ log.accion }}</span>
+                        </td>
+                        <td>
+                            {%- if 'Cliente' in log.detalles -%}
+                              Cliente
+                            {%- elif 'Admin' in log.detalles -%}
+                              {{ log.usuario.nombre_usuario if log.usuario else 'Admin' }}
+                            {%- else -%}
+                              Anónimo
+                            {%- endif -%}
+                        </td>
+                        <td><code>{{ log.tabla_afectada }}</code></td>
+
+                        <td>
+                            <code class="badge bg-dark fs-6 px-2 py-1">{{ log.ip_origen }}</code>
+                        </td>
+                        <td>{{ log.latitud or 'N/A' }}</td>
+                        <td>{{ log.longitud or 'N/A' }}</td>
+                        <td>
+                            <small class="text-muted">{{ log.dispositivo or 'N/A' }}</small>
+                        </td>
+
+                        <td>
+                            <div class="small pre-wrap">{{ log.detalles[:100] }}...</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fa-solid fa-clipboard-list fa-3x text-secondary mb-3"></i>
+            <h5 class="text-secondary">No hay logs en el período seleccionado</h5>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tab Movimientos Saldo -->
+    <div class="tab-pane fade p-4" id="movimientos" role="tabpanel">
+        {% if movimientos %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover" id="tabla-movimientos">
+                <thead class="sticky-top bg-secondary">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Cliente</th>
+                        <th>Monto</th>
+                        <th>Saldo Resultante</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos %}
+                    <tr>
+                        <td>{{ mov.fecha_movimiento.strftime('%d/%m %H:%M') if mov.fecha_movimiento else 'Sin fecha' }}</td>
+                        <td>
+                            {% if mov.tipo == 'Recarga' %}
+                                <span class="badge bg-success">{{ mov.tipo }}</span>
+                            {% elif mov.tipo == 'Compra' %}
+                                <span class="badge bg-danger">{{ mov.tipo }}</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ mov.tipo }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ mov.cliente.nombre_completo if mov.cliente else 'N/A' }}</td>
+                        <td class="fw-bold {{ 'text-success' if mov.monto > 0 else 'text-danger' }}">
+{{ ' +S/ ' if mov.monto > 0 else ' -S/ ' }}{{ "%.2f"|format((mov.monto | abs)) }}
+                        </td>
+                        <td>S/ {{ "%.2f"|format(mov.saldo_resultante) }}</td>
+                        <td>{{ mov.descripcion }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fa-solid fa-wallet fa-3x text-secondary mb-3"></i>
+            <h5 class="text-secondary">No hay movimientos de saldo</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick filters -->
+<div class="mt-4 d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('admin.auditoria') }}" class="btn btn-sm btn-outline-secondary">Limpiar filtros</a>
+    <a href="{{ url_for('admin.auditoria', fecha_inicio=fecha_hoy, fecha_fin=fecha_hoy) }}" class="btn btn-sm btn-outline-info">
+        <i class="fa-solid fa-calendar-day"></i> Hoy
+    </a>
+    <a href="{{ url_for('admin.auditoria', fecha_inicio=fecha_semana, fecha_fin=fecha_hoy) }}" class="btn btn-sm btn-outline-info">
+        <i class="fa-solid fa-calendar-week"></i> 7 días
+    </a>
+</div>
+
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .pre-wrap {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .sticky-top thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .table-danger td { border-top-color: #dc3545 !important; }
+</style>
+{% endblock %}
+

@@ -41,9 +41,13 @@ class AuditoriaLog(db.Model):
     tabla_afectada = db.Column(db.String(50), nullable=False)
     detalles = db.Column(db.Text)
     ip_origen = db.Column(db.String(45), nullable=False)
+    latitud = db.Column(db.String(20))
+    longitud = db.Column(db.String(20))
     dispositivo = db.Column(db.String(255))
     fecha_accion = db.Column(db.DateTime, default=obtener_hora_peru)
     estado = db.Column(db.Boolean, default=True)
+
+    usuario = db.relationship('Usuario', backref='auditorias', lazy=True)
 
 
 class Venta(db.Model):

@@ -80,7 +80,11 @@
                         <div class="mensaje-preview text-primary" style="cursor: pointer;" onclick="verMensajeCompleto(this)">{{ sug.mensaje[:100] }}... <small>(clic para completo)</small></div>
 
                     </td>
-                    <td class="small">{{ sug.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+<td class="small">{{ sug.fecha.strftime('%d/%m/%Y %H:%M') if sug.fecha else 'Sin fecha' }}</td>
+</xai:function_call > 
+
+<xai:function_call name="edit_file">
+<parameter name="path">TODO.md
                     <td>
                         {% if sug.estado %}
                             <span class="badge bg-success"><i class="fa-solid fa-eye me-1"></i> Nueva</span>

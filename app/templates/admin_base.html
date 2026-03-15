@@ -213,9 +213,11 @@
 
                     <a href="#" class="sidebar-link"><i class="fa-solid fa-key"></i> Gestión de Cuentas</a>
 
-                    <a href="#" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i> Reportes y Finanzas</a>
+                    <a href="{{ url_for('admin.auditoria') }}" class="sidebar-link"><i class="fa-solid fa-magnifying-glass-chart"></i> Auditoría</a>
 
-                    <a href="{{ url_for('admin.ventas_proveedores') }}" class="sidebar-link {% if request.endpoint == 'admin.ventas_proveedores' %}active{% endif %}"><i class="fa-solid fa-calendar-check"></i> Ventas de Proveedores</a>
+                    <a href="{{ url_for('admin.ventas_proveedores') }}" class="sidebar-link {% if request.endpoint == 'admin.ventas_proveedores' %}active{% endif %}"><i class="fa-solid fa-calendar-check"></i> Ventas Proveedores</a>
+
+                    <a href="#" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i> Reportes y Finanzas</a>
                     
                     <hr class="border-secondary mx-3 my-2">
 <a href="{{ url_for('admin.sugerencias') }}" class="sidebar-link {% if request.endpoint == 'admin.sugerencias' %}active{% endif %} text-warning"><i class="fa-solid fa-lightbulb"></i> Sugerencias ({{ sugerencias_count or 0 }})</a>
