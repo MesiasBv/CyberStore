@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime
 from flask_login import UserMixin # Nos ayudará con las sesiones más adelante
+from app.utils.hora_peru import obtener_hora_peru
 
 class Usuario(db.Model, UserMixin):
     __tablename__ = 'usuarios'
@@ -42,7 +43,7 @@ class Cliente(db.Model, UserMixin):
     password_hash = db.Column(db.String(255), nullable=False)
     telefono_whatsapp = db.Column(db.String(20))
     saldo = db.Column(db.Numeric(10, 2), default=0.00)
-    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_registro = db.Column(db.DateTime, default=obtener_hora_peru)
     estado = db.Column(db.Boolean, default=True)
     
     # Relaciones

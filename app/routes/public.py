@@ -9,6 +9,7 @@ from app.models.usuarios import Cliente, Proveedor
 from app.models.productos import Producto, InventarioStock
 from app.models.ventas import Venta, MovimientoSaldo
 from app.models.notificaciones import Notificacion
+from app.utils.hora_peru import obtener_hora_peru
 from datetime import datetime, date
 from urllib.parse import quote
 import random
@@ -188,8 +189,8 @@ def procesar_compra(id):
             if tipo_entrega == 'cliente_propio' and correo_cliente:
                 cuenta_disponible.correo_acceso = correo_cliente
 
-        # Obtener fecha y hora actual del servidor (hora local)
-        ahora = datetime.now()
+        # Obtener fecha y hora actual del servidor (hora Perú)
+        ahora = obtener_hora_peru()
         fecha_hoy = ahora.date()
 
         # Calcular fecha fin: mismo dia, mes siguiente

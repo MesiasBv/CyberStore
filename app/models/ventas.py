@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from app.utils.hora_peru import obtener_hora_peru
 
 class MovimientoSaldo(db.Model):
     __tablename__ = 'movimientos_saldo'
@@ -9,7 +10,7 @@ class MovimientoSaldo(db.Model):
     monto = db.Column(db.Numeric(10, 2), nullable=False)
     saldo_resultante = db.Column(db.Numeric(10, 2), nullable=False)
     descripcion = db.Column(db.String(255))
-    fecha_movimiento = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_movimiento = db.Column(db.DateTime, default=obtener_hora_peru)
     estado = db.Column(db.Boolean, default=True)
 
 class ServicioAdquirido(db.Model):
@@ -21,7 +22,7 @@ class ServicioAdquirido(db.Model):
     precio_pagado = db.Column(db.Numeric(10, 2), nullable=False)
     
     estado_invitacion = db.Column(db.Enum('No Aplica', 'Pendiente de Envío', 'Invitación Enviada'), default='No Aplica')
-    fecha_compra = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_compra = db.Column(db.DateTime, default=obtener_hora_peru)
     fecha_inicio = db.Column(db.Date, nullable=False)
     fecha_fin = db.Column(db.Date, nullable=False)
     estado_servicio = db.Column(db.Enum('Activo', 'Por Vencer', 'Vencido', 'Suspendido', 'Completado'), default='Activo')
@@ -41,7 +42,7 @@ class AuditoriaLog(db.Model):
     detalles = db.Column(db.Text)
     ip_origen = db.Column(db.String(45), nullable=False)
     dispositivo = db.Column(db.String(255))
-    fecha_accion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_accion = db.Column(db.DateTime, default=obtener_hora_peru)
     estado = db.Column(db.Boolean, default=True)
 
 
@@ -59,7 +60,7 @@ class Venta(db.Model):
     inventario_id = db.Column(db.Integer, db.ForeignKey('inventario_stock.id'), nullable=True) 
     
     precio_final = db.Column(db.Numeric(10, 2), nullable=False)
-    fecha_venta = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_venta = db.Column(db.DateTime, default=obtener_hora_peru)
     
     # Fechas de suscripción del cliente
     fecha_inicio_servicio = db.Column(db.Date, nullable=True)
