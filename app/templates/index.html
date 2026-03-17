@@ -3,8 +3,8 @@
 {% block title %}Inicio - CyberStore{% endblock %}
 
 {% block content %}
+
 {% if compra_exitosa_id %}
-<!-- Modal de compra exitosa -->
 <div class="modal fade" id="modalCompraExitosa" tabindex="-1" aria-hidden="true" data-bs-theme="dark" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content card-dark border-success text-white">
@@ -31,14 +31,74 @@
 </script>
 {% endif %}
 
-<div class="card card-dark border-0 shadow-lg mb-5 text-center py-5 mt-4">
-    <h1 class="fw-bold text-white display-4">Las mejores cuentas al <span class="text-cyber">mejor precio</span></h1>
-    <p class="text-secondary fs-5">Streaming, licencias y juegos con entrega inmediata y soporte 24/7.</p>
-    <div class="mt-4">
-        <a href="{{ url_for('public.catalogo') }}" class="btn btn-primary-custom btn-lg">
-            <i class="fa-solid fa-cart-shopping"></i> Ver Catálogo
-        </a>
+<!-- 🔥 Hero Slider Premium 🔥 -->
+<div id="heroSlider" class="carousel slide carousel-fade hero-carousel mb-4"     
+    data-bs-ride="carousel"
+    data-bs-interval="4500"
+    data-bs-pause="hover">
+
+    <div class="carousel-indicators hero-indicators">
+        <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="3" aria-label="Slide 4"></button>
     </div>
+
+    <div class="carousel-inner">
+        <div class="carousel-item active hero-slide">
+            <img src="{{ url_for('static', filename='img/slider/streaming_slide1.png') }}" class="hero-image" alt="Streaming Premium">
+            <div class="hero-overlay"></div>
+            <div class="hero-button-container">
+                <a href="{{ url_for('public.catalogo') }}" class="hero-btn">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Ver Catálogo</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="carousel-item hero-slide">
+            <img src="{{ url_for('static', filename='img/slider/musica_slide2.png') }}" class="hero-image" alt="Música Premium">
+            <div class="hero-overlay"></div>
+            <div class="hero-button-container">
+                <a href="{{ url_for('public.catalogo') }}" class="hero-btn">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Ver Catálogo</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="carousel-item hero-slide">
+            <img src="{{ url_for('static', filename='img/slider/herramientas_slide3.png') }}" class="hero-image" alt="Herramientas Premium">
+            <div class="hero-overlay"></div>
+            <div class="hero-button-container">
+                <a href="{{ url_for('public.catalogo') }}" class="hero-btn">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Ver Catálogo</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="carousel-item hero-slide">
+            <img src="{{ url_for('static', filename='img/slider/diseño_slide4.png') }}" class="hero-image" alt="Diseño Premium">
+            <div class="hero-overlay"></div>
+            <div class="hero-button-container">
+                <a href="{{ url_for('public.catalogo') }}" class="hero-btn">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Ver Catálogo</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <button class="carousel-control-prev hero-control" type="button" data-bs-target="#heroSlider" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+    </button>
+
+    <button class="carousel-control-next hero-control" type="button" data-bs-target="#heroSlider" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+    </button>
 </div>
 
 <h3 class="text-white border-bottom border-secondary pb-2 mb-4">Destacados</h3>
