@@ -1,4 +1,5 @@
 import os
+import pytz
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
@@ -26,12 +27,21 @@ def proveedor_required(f):
 def dashboard():
     mi_id = session.get('usuario_id')
     
-    # Obtener la fecha de hoy usando hora local del servidor
-    ahora = datetime.now()
-    fecha_hoy_peru = ahora.date()
+   # --- CONFIGURACIÓN DE ZONA HORARIA PERÚ ---
+
+    tz_peru = pytz.timezone('America/Lima')
+
+    ahora_peru = datetime.now(tz_peru) # Obtiene la hora exacta de Perú
+
+    fecha_hoy_peru = ahora_peru.date()
+
     
-    today_start = datetime.combine(fecha_hoy_peru, datetime.min.time())
-    today_end = datetime.combine(fecha_hoy_peru, datetime.max.time())
+
+    # Creamos el inicio y fin del día basados estrictamente en la fecha de Perú
+
+    today_start = tz_peru.localize(datetime.combine(fecha_hoy_peru, datetime.min.time()))
+
+    today_end = tz_peru.localize(datetime.combine(fecha_hoy_peru, datetime.max.time()))
     
     # 1. Ventas del día (ventas directas de cuentas)
     ventas_hoy = Venta.query.filter(

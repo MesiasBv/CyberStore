@@ -20,11 +20,58 @@
                         <i class="fa-solid fa-plus-circle me-2"></i> Agregar Fondos
                     </button>
                 </div>
-            </div>
+    </div>
+    </div>
+</div>
+
+<!-- Solicitudes de Recarga -->
+<div class="card card-dark border-0 shadow-lg mt-4">
+    <div class="card-header border-secondary bg-transparent">
+        <h5 class="text-white mb-0"><i class="fa-solid fa-clock text-warning me-2"></i> Solicitudes de Recarga Pendientes</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small text-uppercase">
+                    <tr>
+                        <th class="ps-4">Fecha</th>
+                        <th>Monto</th>
+                        <th>Titular</th>
+                        <th class="text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in solicitudes %}
+                    <tr>
+                        <td class="ps-4 text-secondary small">{{ s.fecha_solicitud.strftime('%d/%m %H:%M') }}</td>
+                        <td class="text-success fw-bold">S/ {{ "%.2f"|format(s.monto) }}</td>
+                        <td class="text-white">{{ s.nombre_titular_pago }}</td>
+                        <td class="text-center">
+                            {% if s.estado == 'Pendiente' %}
+                            <span class="badge bg-warning">⏳ {{ s.estado }}</span>
+                            {% elif s.estado == 'Aprobado' %}
+                            <span class="badge bg-success">✅ {{ s.estado }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">❌ {{ s.estado }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-secondary">
+                            <i class="fa-solid fa-inbox fa-3x mb-3"></i>
+                            <p class="mb-0">No tienes solicitudes pendientes.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    <!-- Historial de Movimientos -->
+<!-- Historial de Movimientos -->
+
     <div class="card card-dark border-0 shadow-lg">
         <div class="card-header border-secondary bg-transparent">
             <h5 class="text-white mb-0"><i class="fa-solid fa-history text-cyber me-2"></i> Historial de Movimientos</h5>
@@ -92,7 +139,7 @@
                             <i class="fa-solid fa-triangle-exclamation text-danger fs-5 me-3"></i>
                             <div>
                                 <strong class="text-danger">Importante:</strong>
-                                <span class="text-white">Después de realizar el pago, envíanos el voucher por WhatsApp para validar tu recarga.</span>
+                                <span class="text-white">Después de realizar el pago, envíanos la solicitud de recarga para poder validarlo.</span>
                             </div>
                         </div>
                     </div>
@@ -134,9 +181,9 @@
                         <div class="card-body">
                             <ol class="text-secondary small ps-3">
                                 <li class="mb-2">Selecciona el monto que deseas recargar en tu billetera.</li>
-                                <li class="mb-2">Realiza el pago mediante <strong>Yape</strong> al número que se mostrará.</li>
-                                <li class="mb-2">Captura el <strong>voucher de pago</strong> (captura de pantalla o foto).</li>
-                                <li class="mb-2">Haz clic en <strong>"Enviar Voucher por WhatsApp"</strong> y envíanos la imagen.</li>
+                                <li class="mb-2">Realiza el pago mediante <strong>Yape</strong> al número o QR que se mostrará.</li>
+                                <li class="mb-2">Escribe el nombre de la persona que yapeó, Ej: Juan Per*.</li>
+                                <li class="mb-2">Haz clic en <strong>"Enviar Solicitud de Recarga"</strong>.</li>
                                 <li class="mb-0">Nuestro equipo validará tu pago y <strong>agregará los fondos</strong> a tu billetera en breve.</li>
                             </ol>
                         </div>
@@ -152,8 +199,8 @@
                                 <li class="mb-1">El monto mínimo de recarga es de <strong>S/ 3.00</strong>.</li>
                                 <li class="mb-1">El monto máximo de recarga es de <strong>S/ 500.00</strong>.</li>
                                 <li class="mb-1">Las recargas solo se procesan en <strong>horario laboral</strong> (8:00 AM - 11:00 PM).</li>
-                                <li class="mb-1">El tiempo de validación es de <strong>5 a 30 minutos</strong> después de enviar el voucher.</li>
-                                <li class="mb-1">Los vouchers deben ser enviados <strong>el mismo día</strong> de la transferencia.</li>
+                                <li class="mb-1">El tiempo de validación es de <strong>2 a 5 minutos</strong> después de enviar la solicitud de recarga.</li>
+                                <li class="mb-1">Las solicitudes de recarga deben ser enviadas <strong>el mismo día</strong> de la transferencia.</li>
                                 <li class="mb-0">No nos hacemos responsables por transferencias realizadas a números incorrectos.</li>
                             </ul>
                         </div>
@@ -192,9 +239,17 @@
                     </div>
 
                     <div class="text-center mt-3">
-                        <a id="btnWhatsapp" href="#" class="btn btn-success btn-lg fw-bold" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i> Enviar Voucher por WhatsApp
-                        </a>
+                        <form id="formRecarga">
+                            <div class="mb-3">
+                                <label class="form-label text-white">Nombre completo del titular del pago (Yape/BCP)</label>
+                                <input type="text" class="form-control w-75 mx-auto" name="nombre_titular_pago" placeholder="Ej. Juan Per*" required>
+                                <input type="hidden" id="monto_form" name="monto" value="">
+                            </div>
+                            <button type="submit" class="btn btn-success btn-lg fw-bold">
+                                <i class="fa-solid fa-paper-plane me-2"></i> Enviar Solicitud de Recarga
+                            </button>
+                        </form>
+                        <div id="mensajeStatus" class="mt-3" style="display: none;"></div>
                     </div>
                     
                     <div class="text-center mt-3">
@@ -259,11 +314,7 @@
         document.getElementById('paso1').style.display = 'none';
         document.getElementById('paso2').style.display = 'block';
         document.getElementById('montoSeleccionado').textContent = 'S/ ' + montoActual.toFixed(2);
-        
-        // Generar mensaje para WhatsApp
-        const mensaje = encodeURIComponent(`Hola, soy ${nombreUsuario}. Acabo de realizar un pago de S/ ${montoActual.toFixed(2)} por Yape. Adjunto el voucher para validar mi recarga.`);
-        const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
-        document.getElementById('btnWhatsapp').href = urlWhatsApp;
+        document.getElementById('monto_form').value = montoActual.toFixed(2);
     }
     
     function volverPaso1() {
@@ -282,6 +333,25 @@
         volverPaso1();
         document.getElementById('montoPersonalizado').style.display = 'none';
         document.getElementById('montoInput').value = '';
+    });
+
+    // AJAX for form submit
+    document.getElementById('formRecarga').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/solicitar-recarga', {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json()).then(data => {
+            const statusDiv = document.getElementById('mensajeStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<div class="alert alert-success"> ' + data.message + '</div>';
+            statusDiv.scrollIntoView();
+        }).catch(err => {
+            const statusDiv = document.getElementById('mensajeStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<div class="alert alert-danger">Error. Intenta de nuevo.</div>';
+        });
     });
 </script>
 {% endblock %}

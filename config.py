@@ -44,3 +44,7 @@ class Config:
     
     # WhatsApp del admin para recibir vouchers
     WHATSAPP_ADMIN = os.environ.get('WHATSAPP_ADMIN', '51910016266')
+    
+    # Configuración Telegram Bot
+    BOT_TOKEN = os.environ.get('BOT_TOKEN')
+    ADMIN_TELEGRAM_ID = os.environ.get('ADMIN_TELEGRAM_ID')

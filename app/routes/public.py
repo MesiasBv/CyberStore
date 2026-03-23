@@ -8,6 +8,8 @@ from app import db
 from app.models.usuarios import Cliente, Proveedor
 from app.models.productos import Producto, InventarioStock
 from app.models.ventas import Venta, MovimientoSaldo
+from app.models.solicitudes_recarga import SolicitudRecarga
+from config import Config
 from app.models.notificaciones import Notificacion
 from app.utils.hora_peru import obtener_hora_peru
 from datetime import datetime, date
@@ -322,9 +324,21 @@ def mi_billetera():
     
     cliente_id = session.get('usuario_id')
     user_obj = Cliente.query.get(cliente_id)
+    
+    # 1. Buscamos el historial de dinero (lo que ya tenías)
     movimientos = MovimientoSaldo.query.filter_by(cliente_id=cliente_id).order_by(MovimientoSaldo.fecha_movimiento.desc()).all()
     
-    return render_template('mi_billetera.html', current_user_obj=user_obj, movimientos=movimientos)
+    # 2. EL CAMBIO CLAVE: Buscamos las solicitudes pendientes, aprobadas o rechazadas de este cliente
+    solicitudes = SolicitudRecarga.query.filter_by(
+        usuario_id=cliente_id, 
+        estado='Pendiente' # <-- Esta es la magia que limpia tu tabla
+    ).order_by(SolicitudRecarga.fecha_solicitud.desc()).all()
+
+    # 3. Enviamos todo al HTML
+    return render_template('mi_billetera.html', 
+                           current_user_obj=user_obj, 
+                           movimientos=movimientos, 
+                           solicitudes=solicitudes)
 
 @public_bp.route('/mi-billetera/agregar', methods=['POST'])
 def agregar_fondos():
@@ -365,6 +379,36 @@ def agregar_fondos():
     
     flash(f'¡Se han agregado S/ {monto:.2f} a tu billetera!', 'success')
     return redirect(url_for('public.mi_billetera'))
+
+@public_bp.route('/solicitar-recarga', methods=['POST'])
+def solicitar_recarga():
+    if not session.get('usuario_id') or session.get('rol') != 'Cliente':
+        return jsonify({'success': False, 'message': 'No autorizado'}), 401
+    
+    cliente = Cliente.query.get(session.get('usuario_id'))
+    monto = request.form.get('monto')
+    nombre_titular_pago = request.form.get('nombre_titular_pago', '').strip()
+    
+    try:
+        monto = float(monto)
+        if monto < 3 or monto > 500:
+            return jsonify({'success': False, 'message': 'Monto inválido (3-500)'}), 400
+        if not nombre_titular_pago:
+            return jsonify({'success': False, 'message': 'Nombre titular requerido'}), 400
+    except:
+        return jsonify({'success': False, 'message': 'Monto inválido'}), 400
+    
+    new_solicitud = SolicitudRecarga(
+        usuario_id=cliente.id,
+        monto=monto,
+        nombre_titular_pago=nombre_titular_pago
+    )
+    db.session.add(new_solicitud)
+    db.session.commit()
+    
+    # Bot polling will detect
+    return jsonify({'success': True, 'message': 'Solicitud enviada. En espera de validación.'})
+
 
 @public_bp.route('/obtener-credenciales-venta/<int:venta_id>')
 def obtener_credenciales_venta(venta_id):

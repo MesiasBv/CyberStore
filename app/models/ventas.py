@@ -1,12 +1,14 @@
 from app import db
 from datetime import datetime
 from app.utils.hora_peru import obtener_hora_peru
+from sqlalchemy import Enum
 
 class MovimientoSaldo(db.Model):
     __tablename__ = 'movimientos_saldo'
     id = db.Column(db.Integer, primary_key=True)
     cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
-    tipo = db.Column(db.Enum('Recarga', 'Compra', 'Reembolso'), nullable=False)
+    solicitud_recarga_id = db.Column(db.Integer, db.ForeignKey('solicitudes_recarga.id'), nullable=True)
+    tipo = db.Column(Enum('Recarga', 'Compra', 'Reembolso'), nullable=False)
     monto = db.Column(db.Numeric(10, 2), nullable=False)
     saldo_resultante = db.Column(db.Numeric(10, 2), nullable=False)
     descripcion = db.Column(db.String(255))
@@ -21,11 +23,11 @@ class ServicioAdquirido(db.Model):
     inventario_id = db.Column(db.Integer, db.ForeignKey('inventario_stock.id'), nullable=False)
     precio_pagado = db.Column(db.Numeric(10, 2), nullable=False)
     
-    estado_invitacion = db.Column(db.Enum('No Aplica', 'Pendiente de Envío', 'Invitación Enviada'), default='No Aplica')
+    estado_invitacion = db.Column(Enum('No Aplica', 'Pendiente de Envío', 'Invitación Enviada'), default='No Aplica')
     fecha_compra = db.Column(db.DateTime, default=obtener_hora_peru)
     fecha_inicio = db.Column(db.Date, nullable=False)
     fecha_fin = db.Column(db.Date, nullable=False)
-    estado_servicio = db.Column(db.Enum('Activo', 'Por Vencer', 'Vencido', 'Suspendido', 'Completado'), default='Activo')
+    estado_servicio = db.Column(Enum('Activo', 'Por Vencer', 'Vencido', 'Suspendido', 'Completado'), default='Activo')
     renovacion_solicitada = db.Column(db.Boolean, default=False)
     estado = db.Column(db.Boolean, default=True)
     
@@ -69,7 +71,7 @@ class Venta(db.Model):
     # Fechas de suscripción del cliente
     fecha_inicio_servicio = db.Column(db.Date, nullable=True)
     fecha_fin_servicio = db.Column(db.Date, nullable=True)
-    estado_servicio = db.Column(db.Enum('Activo', 'Por Vencer', 'Vencido', 'Suspendido', 'Completado'), default='Activo')
+    estado_servicio = db.Column(Enum('Activo', 'Por Vencer', 'Vencido', 'Suspendido', 'Completado'), default='Activo')
     
     # Fecha de expiración de la cuenta que el proveedor pagó a la plataforma
     fecha_expiracion_cuenta_proveedor = db.Column(db.Date, nullable=True)
@@ -83,7 +85,7 @@ class Venta(db.Model):
     # Correo del cliente (para Netflix cuenta completa, YouTube, Canva)
     correo_cliente = db.Column(db.String(255), nullable=True)
     # Estado de entrega: Pendiente (requiere acción) / Entregado
-    estado_entrega = db.Column(db.Enum('Pendiente', 'Entregado'), default='Pendiente')
+    estado_entrega = db.Column(Enum('Pendiente', 'Entregado'), default='Pendiente')
     fecha_entrega = db.Column(db.DateTime, nullable=True)
     # Notas opcionales del proveedor al entregar
     notas_entrega = db.Column(db.Text, nullable=True)
