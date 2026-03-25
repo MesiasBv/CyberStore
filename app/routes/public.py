@@ -19,13 +19,16 @@ import string
 
 public_bp = Blueprint('public', __name__)
 
+            
 def generar_codigo_unico():
-    """Genera un código único aleatorio para ventas (formato: CS-XXXXXXXX)"""
+    """Genera un codigo corto y unico para ventas (Formato: BV-12345)"""
+    prefijo = "BV"
     while True:
-        caracteres = string.ascii_uppercase + string.digits
-        codigo_aleatorio = ''.join(random.choices(caracteres, k=8))
-        codigo = f"CS-{codigo_aleatorio}"
-        # Verificar que no exista ya
+        # Generamos 5 digitos aleatorios
+        numeros = ''.join(random.choices(string.digits, k=5))
+        codigo = f"{prefijo}-{numeros}"
+        
+        # Verificamos en la base de datos que no exista (por seguridad)
         if not Venta.query.filter_by(codigo_unico=codigo).first():
             return codigo
 
@@ -657,12 +660,21 @@ def guardar_correo_y_contactar():
         db.session.add(notificacion)
         db.session.commit()
 
-    # Generar URL de WhatsApp
+    # Generar URL de WhatsApp con el nuevo formato ordenado
     whatsapp_url = ''
     if venta.proveedor and venta.proveedor.telefono_contacto:
-        mensaje = f'Hola, vengo de CyberStore y adquirí {venta.producto.nombre_producto} (código: {venta.codigo_unico}).'
+        # Texto base con negritas en *CyberStore* y el nombre del producto
+        texto_intro = f"Hola, vengo de *CyberStore* y adquirí {venta.producto.nombre_producto}"
+        
+        # Formato de lista con asteriscos para las viñetas
+        linea_codigo = f"\n* *Codigo de venta:* {venta.codigo_unico}"
+        
+        mensaje = texto_intro + linea_codigo
+        
         if correo:
-            mensaje += f' Mi correo es: {correo}'
+            mensaje += f"\n* *Mi correo es:* {correo}"
+        
+        # Usamos quote para procesar correctamente los saltos de línea (\n) y asteriscos
         whatsapp_url = f'https://wa.me/51{venta.proveedor.telefono_contacto}?text={quote(mensaje)}'
 
     return jsonify({

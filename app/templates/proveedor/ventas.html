@@ -58,7 +58,6 @@
         <table class="table table-dark table-hover mb-0">
             <thead class="bg-secondary">
                 <tr>
-                    <th>ID</th>
                     <th>Codigo</th>
                     <th>Cliente</th>
                     <th>Producto</th>
@@ -76,7 +75,6 @@
                 <!-- Ventas Directas (cuentas simples) -->
                 {% for v in ventas %}
                 <tr class="fila-venta">
-                    <td class="fw-bold">#{{ v.id }}</td>
                     <td class="text-secondary">{{ v.codigo_unico }}</td>
                     <td class="fw-bold">{{ v.cliente.nombre_completo }}</td>
                     <td>
@@ -133,7 +131,7 @@
                             <i class="fa-solid fa-check"></i>
                         </button>
                         {% endif %}
-                        <button class="btn btn-sm btn-warning" onclick="if(confirm('¿Notificar {{ v.cliente.nombre_completo }} para renovar?')) fetch('/proveedor/renovar-notificar/{{ v.id }}',{method:'POST'}).then(()=>location.reload());" title="Notificar renovación">
+                        <button class="btn btn-sm btn-warning" onclick="if(confirm("¿Notificar {{ v.cliente.nombre_completo }} para renovar?")) fetch('/proveedor/renovar-notificar/{{ v.id }}', {method: 'POST'}).then(()=>location.reload());" title="Notificar renovación">
                             <i class="fa-solid fa-sync-alt"></i>
                         </button>
                     </td>
@@ -171,14 +169,22 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label text-secondary">Correo Entregado</label>
-                                            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ v.inventario_entregado.correo_acceso if v.inventario_entregado else 'N/A' }}" readonly>
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" 
+                                                name="correo" 
+                                                value="{{ v.inventario_entregado.correo_acceso if v.inventario_entregado else 'N/A' }}">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label text-secondary">Contrasena (Opcional)</label>
-                                            <input type="text" class="form-control bg-dark text-white border-secondary" name="password" value="{{ v.inventario_entregado.password_acceso if v.inventario_entregado else '' }}" placeholder="Nueva contrasena">
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" 
+                                                name="password" 
+                                                value="{{ v.inventario_entregado.password_acceso if v.inventario_entregado else '' }}" 
+                                                placeholder="Nueva contrasena">
                                         </div>
                                     </div>
                                     {% endif %}
+
+
+                                    
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label text-secondary">Precio (S/)</label>
@@ -302,7 +308,6 @@
                 <!-- Servicios (cuentas con renovacion) -->
                 {% for s in servicios %}
                 <tr class="fila-servicio">
-                    <td class="fw-bold">#{{ s.id }}</td>
                     <td class="text-secondary">-</td>
                     <td class="fw-bold">{{ s.cliente.nombre_completo }}</td>
                     <td>{{ s.producto.nombre_producto }}</td>
@@ -329,7 +334,7 @@
                 {% endfor %}
                 {% else %}
                 <tr>
-                    <td colspan="11" class="text-center py-4 text-secondary">
+                    <td colspan="10" class="text-center py-4 text-secondary">
                         <i class="fa-solid fa-receipt fa-2x mb-2" style="opacity: 0.5;"></i><br>
                         No hay ventas ni servicios registrados todavia.
                     </td>

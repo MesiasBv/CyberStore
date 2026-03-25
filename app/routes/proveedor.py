@@ -297,17 +297,23 @@ def editar_servicio(id):
     
     return render_template('proveedor/editar_servicio.html', servicio=servicio)
 
-@proveedor_bp.route('/ventas/editar-venta/<int:id>', methods=['GET', 'POST'])
-@proveedor_required
-def editar_venta(id):
-    venta = Venta.query.get_or_404(id)
-    
-    if venta.proveedor_id != session.get('usuario_id'):
-        flash('No tienes permiso para editar esta venta.', 'danger')
-        return redirect(url_for('proveedor.mis_ventas'))
-    
-    if request.method == 'POST':
+if request.method == 'POST':
+        # --- 1. CAPTURAR DATOS DEL FORMULARIO ---
+        nuevo_correo = request.form.get('correo') # Este es el 'name' que pusimos en el HTML
+        nueva_password = request.form.get('password')
         nuevo_precio = request.form.get('precio_final')
+        
+        # --- 2. SINCRONIZACIÓN AUTOMÁTICA CON STOCK ---
+        if venta.inventario_entregado:
+            if nuevo_correo:
+                venta.inventario_entregado.correo_acceso = nuevo_correo
+            if nueva_password:
+                venta.inventario_entregado.password_acceso = nueva_password
+            
+            # También actualizamos el correo en el registro de la venta (opcional)
+            venta.correo_cliente = nuevo_correo
+
+        # --- 3. LÓGICA DE PRECIO (Tu código original) ---
         if nuevo_precio:
             try:
                 venta.precio_final = float(nuevo_precio)
@@ -315,6 +321,7 @@ def editar_venta(id):
                 flash('El precio debe ser un numero valido.', 'danger')
                 return redirect(url_for('proveedor.mis_ventas'))
         
+        # --- 4. LÓGICA DE FECHAS (Tu código original) ---
         fecha_inicio = request.form.get('fecha_inicio_servicio')
         fecha_fin = request.form.get('fecha_fin_servicio')
         
@@ -335,11 +342,10 @@ def editar_venta(id):
         if fecha_expiracion:
             venta.fecha_expiracion_cuenta_proveedor = datetime.strptime(fecha_expiracion, '%Y-%m-%d').date()
         
+        # --- 5. GUARDAR TODO (Sincroniza ambas tablas) ---
         db.session.commit()
-        flash('Venta actualizada correctamente!', 'success')
+        flash('Venta e Inventario actualizados correctamente!', 'success')
         return redirect(url_for('proveedor.mis_ventas'))
-    
-    return render_template('proveedor/editar_venta.html', venta=venta)
 
 @proveedor_bp.route('/mi-stock')
 @proveedor_required
